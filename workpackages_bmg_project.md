@@ -6,15 +6,15 @@
 
 **How to use this:** Everyone works through WP0 first. Then each person takes exactly one of WP1–WP4. After individual study, a short sync session lets each person teach the others. The result: the full team can read both documents, use AsymmeTree, and start implementing the tasks in `bmg1.1.1`.
 
+**Important:** The exercises ask you to write code yourself. Descriptions, hints, and function signatures are provided — but not the implementations. Try hard before looking at the solutions appendix at the very end of this document.
+
 ---
 
 ## WP0 — Graph Theory & Tree Foundations (everyone, ~1.5 h)
 
-This package gives you the vocabulary you need for everything else. It's structured as a mini-curriculum: watch a video, read a short explanation, do a paper exercise, then do a coding exercise in NetworkX. By the end you should be able to draw and manipulate the kinds of graphs and trees that appear in both project documents without hesitation.
+This package gives you the vocabulary you need for everything else. It's structured as a mini-curriculum: watch a video, read a short explanation, do a paper exercise, then do a coding exercise in NetworkX.
 
 ### Setup: Install NetworkX
-
-Before you start, get your Python environment ready. You'll use it throughout.
 
 ```bash
 pip install networkx matplotlib
@@ -29,8 +29,9 @@ import matplotlib.pyplot as plt
 
 ### 0.1 — Graphs: Vertices, Edges, Neighborhoods (~15 min)
 
-**📺 Watch:** "Graph Theory: An Introduction to Key Concepts" by Sarada Herke — first 10 minutes cover vertices, edges, degree, adjacency.
-https://www.youtube.com/watch?v=HmQR8Xy9DeM
+**📺 Watch:** Reducible — "Introduction to Graph Theory: A Computer Science Perspective"
+https://www.youtube.com/watch?v=LFKZLXVO-Dg
+Watch up to about the 10-minute mark. Covers vertices, edges, degree, adjacency, graph types (directed, weighted, bipartite), and graph representations as data structures (adjacency lists, adjacency matrices). Beautifully animated — the Sudoku-as-graph example is a great hook.
 
 **The idea in a nutshell.** A **graph** G = (V, E) is a set V of **vertices** (dots) and a set E of **edges** (lines between pairs of dots). Two vertices connected by an edge are **adjacent** or **neighbors**. The **degree** of a vertex is how many edges touch it. A **path** is a sequence of distinct vertices where consecutive ones are connected by edges. A graph is **connected** if every pair of vertices is linked by some path. A maximal connected piece is a **connected component**.
 
@@ -38,71 +39,38 @@ A **subgraph** picks some vertices and some edges between them. An **induced sub
 
 A **bipartite graph** splits its vertices into two groups with every edge going between groups, never within. A **complete bipartite graph** K_{m,n} has *every* possible edge between the two groups.
 
-**✏️ Paper exercise 0.1:** Draw a graph on 5 vertices {a, b, c, d, e} with edges {ab, bc, cd, de, ae, bd}. List the degree of each vertex. Find all paths from a to d. Is the graph connected? Find a subgraph that is a cycle. Find the induced subgraph on {a, b, d, e}.
+**✏️ Paper exercise 0.1:** Draw a graph on 5 vertices {a, b, c, d, e} with edges {ab, bc, cd, de, ae, bd}.
 
-**💻 NetworkX exercise 0.1:**
+(a) List the degree of each vertex.
+(b) Find all paths from a to d.
+(c) Is the graph connected?
+(d) Find a subgraph that is a cycle.
+(e) Find the induced subgraph on {a, b, d, e} — list its edges.
 
-```python
-# Build the graph from the paper exercise
-G = nx.Graph()
-G.add_edges_from([('a','b'), ('b','c'), ('c','d'), ('d','e'), ('a','e'), ('b','d')])
+**💻 NetworkX exercise 0.1:** Build this graph in NetworkX. Use `G.degree()`, `nx.all_simple_paths()`, `nx.is_connected()`, and `G.subgraph()` to verify your paper answers.
 
-# Print the degree of each vertex
-for v in G.nodes():
-    print(f"deg({v}) = {G.degree(v)}")
-
-# Find all simple paths from a to d
-for path in nx.all_simple_paths(G, 'a', 'd'):
-    print("Path a→d:", path)
-
-# Check if connected
-print("Connected?", nx.is_connected(G))
-
-# Draw it
-nx.draw(G, with_labels=True, node_color='lightblue', node_size=500)
-plt.show()
-
-# Extract the induced subgraph on {a, b, d, e}
-H = G.subgraph(['a', 'b', 'd', 'e'])
-print("Induced subgraph edges:", list(H.edges()))
-nx.draw(H, with_labels=True, node_color='lightyellow', node_size=500)
-plt.show()
-```
+*Hint:* `nx.Graph()` creates an undirected graph. `add_edges_from()` takes a list of tuples. `nx.draw(G, with_labels=True)` visualizes it.
 
 ---
 
 ### 0.2 — Directed Graphs (Digraphs) (~10 min)
 
-**📺 Watch:** "NetworkX Crash Course — Graph Theory in Python" by NeuralNine (first 15 min, covers both undirected and directed graphs in NetworkX with live coding):
-https://www.youtube.com/watch?v=VetBkjcm9Go
+**📺 Watch:** Continue the Reducible intro video from 0.1 (the section on directed and weighted graphs), then watch Reducible — "Depth First Search (DFS) Explained: Algorithm, Examples, and Code" — the first ~8 minutes, which give a clear visual introduction to how you traverse a directed graph by following arrows:
+https://www.youtube.com/watch?v=PMMc4VsIacU
+
+DFS matters here because it's exactly how algorithms walk through rooted trees (from root toward leaves), which is the core operation in everything from lca computation to the Aho algorithm.
 
 **The idea.** In a **directed graph** (digraph), every edge has a direction — it's an arrow from a start vertex to an end vertex. We write (x, y) or x → y for an arc from x to y. Each vertex now has an **in-degree** (arrows coming in) and an **out-degree** (arrows going out). The **out-neighborhood** N⁺(x) is the set of vertices that x points to. A vertex with out-degree 0 is a **sink** (no arrows leaving); one with in-degree 0 is a **source** (no arrows arriving).
 
 A digraph is **weakly connected** if it's connected when you ignore arrow directions. It's **strongly connected** if there's a directed path between every ordered pair of vertices.
 
-**✏️ Paper exercise 0.2:** Draw a digraph on 4 vertices {1, 2, 3, 4} with arcs {1→2, 1→3, 2→3, 3→4, 4→2}. For each vertex, list in-degree, out-degree, and out-neighborhood. Is vertex 1 a source? Is any vertex a sink? Is the digraph weakly connected? Strongly connected? (Hint: can you get from 3 back to 1?)
+**✏️ Paper exercise 0.2:** Draw a digraph on 4 vertices {1, 2, 3, 4} with arcs {1→2, 1→3, 2→3, 3→4, 4→2}.
 
-**💻 NetworkX exercise 0.2:**
+(a) For each vertex, list in-degree, out-degree, and out-neighborhood.
+(b) Is vertex 1 a source? Is any vertex a sink?
+(c) Is the digraph weakly connected? Strongly connected? (Hint: can you get from 3 back to 1?)
 
-```python
-D = nx.DiGraph()
-D.add_edges_from([(1,2), (1,3), (2,3), (3,4), (4,2)])
-
-for v in D.nodes():
-    print(f"Vertex {v}: in-deg={D.in_degree(v)}, out-deg={D.out_degree(v)}, "
-          f"out-neighbors={list(D.successors(v))}")
-
-print("Sources (in-degree 0):", [v for v in D.nodes() if D.in_degree(v) == 0])
-print("Sinks (out-degree 0):", [v for v in D.nodes() if D.out_degree(v) == 0])
-print("Weakly connected?", nx.is_weakly_connected(D))
-print("Strongly connected?", nx.is_strongly_connected(D))
-
-# Visualize with arrows
-pos = nx.spring_layout(D, seed=42)
-nx.draw(D, pos, with_labels=True, node_color='lightcoral', 
-        node_size=500, arrows=True, arrowsize=20)
-plt.show()
-```
+**💻 NetworkX exercise 0.2:** Build this digraph using `nx.DiGraph()`. Use `D.in_degree()`, `D.out_degree()`, `D.successors()`, `nx.is_weakly_connected()`, and `nx.is_strongly_connected()` to verify your answers.
 
 ---
 
@@ -119,65 +87,45 @@ Key properties for BMGs:
 
 Every best match graph is color-sink-free by construction (every gene has a closest relative in every other species).
 
-**✏️ Paper exercise 0.3:** Consider 6 vertices with colors: a₁, a₂ (red), b₁, b₂ (blue), c₁ (green). Draw a digraph where every vertex has arcs to at least one vertex of every other color. Is your graph color-sink-free? Now remove the arc from c₁ to any blue vertex — is it still sink-free? Still color-sink-free?
+**✏️ Paper exercise 0.3:** Consider 6 vertices with colors: a₁, a₂ (red), b₁, b₂ (blue), c₁ (green).
 
-**💻 NetworkX exercise 0.3:**
+(a) Draw a digraph where every vertex has arcs to at least one vertex of every other color. Verify it's color-sink-free.
+(b) Now remove the arc from c₁ to any blue vertex. Is it still sink-free? Still color-sink-free?
 
-```python
-# Build a colored digraph
-G = nx.DiGraph()
-# Add nodes with color attributes
-colors = {'a1': 'red', 'a2': 'red', 'b1': 'blue', 'b2': 'blue', 'c1': 'green'}
-for node, color in colors.items():
-    G.add_node(node, color=color)
+**💻 NetworkX exercise 0.3:** Build a colored digraph in NetworkX. Store colors as node attributes using `G.add_node(name, color='red')`. Write a function `is_color_sink_free(G)` that checks the property: for every vertex x and every color s ≠ σ(x), there's at least one arc from x to a vertex of color s.
 
-# Add arcs (only between different colors)
-G.add_edges_from([
-    ('a1','b1'), ('a1','c1'), ('a2','b2'), ('a2','c1'),
-    ('b1','a1'), ('b1','c1'), ('b2','a2'), ('b2','c1'),
-    ('c1','a1'), ('c1','b1')
-])
-
-# Check color-sink-free property
-all_colors = set(colors.values())
-for v in G.nodes():
-    v_color = G.nodes[v]['color']
-    reachable_colors = {G.nodes[u]['color'] for u in G.successors(v)}
-    missing = all_colors - {v_color} - reachable_colors
-    if missing:
-        print(f"  {v} (color={v_color}) is MISSING arcs to colors: {missing}")
-    else:
-        print(f"  {v} (color={v_color}) ✓ has arcs to all other colors")
-
-# Visualize with node colors
-node_colors_list = [colors[v] for v in G.nodes()]
-pos = nx.spring_layout(G, seed=7)
-nx.draw(G, pos, with_labels=True, node_color=node_colors_list, 
-        node_size=600, arrows=True, arrowsize=15, font_weight='bold')
-plt.show()
-```
+*Hint:* Use `G.nodes[v]['color']` to read attributes. `G.successors(v)` gives out-neighbors.
 
 ---
 
-### 0.4 — Rooted Trees, Children, Ancestors, lca (~20 min)
+### 0.4 — Rooted Trees as Graphs: Translating What You Know (~20 min)
 
-**📺 Watch:** Khan Academy — "Understanding and building phylogenetic trees" (~6 min, excellent biological motivation for rooted trees, ancestor relationships, and reading tree diagrams):
-https://www.khanacademy.org/science/hs-biology/x4c673362230887ef:evolution-and-natural-selection/x4c673362230887ef:evidence-of-common-ancestry/v/understanding-and-building-phylogenetic-trees-or-cladograms
+**No intro-to-phylogenetics videos needed — you've all taken the course.** This section is about connecting the biology you already know to the graph-theory vocabulary from the previous sections, and making it precise enough to code against.
 
-**📖 Then read:** This Nature Scitable primer (~10 min) — defines root, branch, node, clade, and last common ancestor with clear figures:
-https://www.nature.com/scitable/topicpage/reading-a-phylogenetic-tree-the-meaning-of-41956/
+**The translation table.** Everything you know from phylogenetics has a graph-theory name:
 
-**The idea.** A **tree** is a connected graph with no cycles. A **rooted tree** picks one vertex as the **root** (drawn at top). Every other vertex has a unique **parent** (next vertex toward root) and zero or more **children** (one step away from root). Vertices with no children are **leaves**; all others are **internal**.
+| Phylogenetics term | Graph theory term | Formal definition |
+|---|---|---|
+| Rooted phylogenetic tree | Rooted tree T = (V, E) with root ρ | Connected DAG where every vertex has exactly one parent, except ρ which has none. Equivalently: a connected graph with no cycles, plus a designated root. |
+| Tips / extant taxa / OTUs | **Leaves** L ⊆ V | Vertices with out-degree 0 (no children). |
+| Internal nodes / HTUs | **Internal vertices** V \ L | Vertices with ≥ 1 child. In a phylogenetic tree specifically: every internal vertex has ≥ 2 children (no pass-through nodes). |
+| Parent branch / ancestor | **Parent**, **ancestor order** ⪯ | parent(v) is the unique vertex one step toward the root. x ⪯ y means y is on the path from x to ρ (y is an ancestor of x). |
+| Children / descendant lineages | **Children** child(v) | The set of vertices one step away from the root through v. |
+| MRCA of a clade | **lca(x, y)** | The ⪯-maximal vertex that is an ancestor of both x and y. Unique in trees. |
+| Clade / monophyletic group | **Subtree** T(v) | All leaves descended from internal vertex v. The set of these leaf-sets forms a **hierarchy**. |
+| Species label on a gene tree | **Leaf coloring** σ: L → S | A surjective map assigning each leaf (gene) to a color (species). Multiple leaves can share a color — that's gene duplication. |
 
-The **ancestor order** ⪯: x ⪯ y means "y is on the path from x up to the root" (y is an ancestor of x). Leaves are minimal; the root is the unique maximum.
+**The key new object: (T, σ).** You're used to species trees where each tip is a distinct species, and gene trees where tips are genes. Here we combine both into a single structure: a gene tree T where every leaf x carries a species label σ(x). The pair (T, σ) is a **leaf-colored tree**. This is the input from which best match graphs are derived.
 
-The **last common ancestor** lca(x, y) is the deepest vertex that is an ancestor of both x and y. In a tree, this is always unique.
+**What's different from your phylogenetics course.** Three things to watch out for:
 
-A **phylogenetic tree** requires that every internal vertex has ≥ 2 children (no "pass-through" nodes with one child).
+1. **lca as a formal operator, not just a concept.** In the papers, lca(x, y) is used in inequalities (lca(x,y) ⪯ lca(x,y')), compared across pairs, and fed into algorithms. You need to think of it as a computable function, not just "the node where two lineages meet."
 
-A **leaf-colored tree** (T, σ) assigns each leaf a color (= species). Multiple leaves can share a color — that represents gene duplication.
+2. **The ancestor order ⪯ is a partial order.** This connects directly to Section 0.5 (DAGs). In a tree, ⪯ is a total order along any root-to-leaf path, but incomparable across different branches. When we move to networks, ⪯ stays a partial order but lca is no longer unique — that's where things get hard.
 
-**✏️ Paper exercise 0.4:** Draw this tree:
+3. **Trees are directed graphs.** You'll store them as `nx.DiGraph` with edges pointing from parent to child. This means all the digraph tools from Section 0.2 apply: `predecessors()` gives the parent, `successors()` gives children, DFS from the root visits every vertex.
+
+**✏️ Paper exercise 0.4:** Consider this gene tree with species map:
 
 ```
          ρ
@@ -189,64 +137,39 @@ A **leaf-colored tree** (T, σ) assigns each leaf a color (= species). Multiple 
        b₁  c₁
 ```
 
-Colors: a₁ = red, b₁ = blue, b₂ = blue, c₁ = green, c₂ = green.
+σ: a₁ = red, b₁ = blue, b₂ = blue, c₁ = green, c₂ = green. (Three species, five genes — there was a duplication in both blue and green.)
 
-(a) List the parent and children of every vertex.
-(b) Compute lca(a₁, b₁), lca(b₁, c₂), lca(a₁, c₁).
-(c) Is it a phylogenetic tree? (Does every internal vertex have ≥ 2 children?)
-(d) Which leaves are "closest relatives" of a₁ in terms of lca depth?
+(a) Write out the ancestor order ⪯ restricted to the leaves and internal vertices u, w, v. Which pairs are comparable? Which are incomparable?
+(b) Compute lca(a₁, b₁), lca(b₁, c₂), lca(b₁, b₂). For the last one: these are paralogs in the same species — what does their lca represent biologically?
+(c) Verify that lca(a₁, b₁) ⪯ lca(a₁, b₂). This inequality is exactly what makes b₁ (not b₂) the best match of a₁ in species blue.
+(d) Is this a valid phylogenetic tree in the sense used by the papers? (Every internal vertex has ≥ 2 children, σ is surjective onto S = {red, blue, green}.)
 
-**💻 NetworkX exercise 0.4:**
+**💻 NetworkX exercise 0.4:** Build this tree as a `DiGraph` (edges from parent to child). Then write a function `lca(T, root, x, y)` that finds the last common ancestor of two leaves.
+
+*Strategy:* Compute the path from root to x and the path from root to y (use `nx.shortest_path()`). Walk both paths in parallel from the root — the last vertex they share is the lca.
+
+Skeleton:
 
 ```python
-# Build a rooted tree as a DiGraph (edges point from parent to child)
-T = nx.DiGraph()
-T.add_edges_from([
-    ('rho', 'u'), ('rho', 'v'),
-    ('u', 'a1'), ('u', 'w'),
-    ('w', 'b1'), ('w', 'c1'),
-    ('v', 'b2'), ('v', 'c2')
-])
-leaves = ['a1', 'b1', 'b2', 'c1', 'c2']
-sigma = {'a1': 'red', 'b1': 'blue', 'b2': 'blue', 'c1': 'green', 'c2': 'green'}
-
-# Find parent and children of each vertex
-for v in T.nodes():
-    parents = list(T.predecessors(v))
-    children = list(T.successors(v))
-    print(f"{v}: parent={parents if parents else 'none (root)'}, children={children if children else '(leaf)'}")
-
-# Compute lca by finding paths from root to each leaf
 def lca(T, root, x, y):
-    """Find last common ancestor by comparing root-to-leaf paths."""
     path_x = nx.shortest_path(T, root, x)
     path_y = nx.shortest_path(T, root, y)
-    ancestor = root
-    for a, b in zip(path_x, path_y):
-        if a == b:
-            ancestor = a
-        else:
-            break
-    return ancestor
-
-print("\nlca(a1, b1) =", lca(T, 'rho', 'a1', 'b1'))
-print("lca(b1, c2) =", lca(T, 'rho', 'b1', 'c2'))
-print("lca(a1, c1) =", lca(T, 'rho', 'a1', 'c1'))
-
-# For each leaf, find its lca with a1 — lower = closer relative
-for leaf in leaves:
-    if leaf != 'a1':
-        a = lca(T, 'rho', 'a1', leaf)
-        depth = nx.shortest_path_length(T, 'rho', a)
-        print(f"lca(a1, {leaf}) = {a} at depth {depth}")
+    # Walk both paths from the root.
+    # As long as they agree, track the current vertex.
+    # The last vertex where they agree is the lca.
+    # YOUR CODE HERE
+    pass
 ```
+
+Test it on the three pairs from the paper exercise.
 
 ---
 
 ### 0.5 — Partial Orders and DAGs (~10 min)
 
-**📺 Watch:** "Directed Acyclic Graphs (1) — Introduction to DAGs" by Nick Huntington-Klein (~10 min, clear visual introduction to DAG structure, paths, and terminology):
-https://www.youtube.com/watch?v=PiekvYYHeVQ
+**📺 Watch:** Reducible — "Breadth First Search (BFS): Visualized and Explained" — first ~8 minutes:
+https://www.youtube.com/watch?v=xlVX7dXLS64
+BFS explores a graph level by level. This is directly relevant to DAGs: a BFS from the root of a phylogenetic network visits vertices in order of their depth, which is how you reason about "closeness" in networks. The contrast with DFS (from 0.2) is also useful — DFS goes deep, BFS goes wide.
 
 **The idea.** A **partial order** ⪯ on a set is reflexive (x ⪯ x), antisymmetric (x ⪯ y and y ⪯ x ⟹ x = y), and transitive (x ⪯ y ⪯ z ⟹ x ⪯ z). The ancestor order on a tree is a partial order. A **directed acyclic graph (DAG)** is a digraph with no directed cycles. Every DAG defines a partial order via reachability (x ⪯ y iff there's a directed path from x to y, or x = y).
 
@@ -254,49 +177,21 @@ The key connection to our project: **phylogenetic networks are DAGs**. Unlike tr
 
 A **topological ordering** of a DAG is a linear arrangement of vertices where every arrow goes "downhill." Every DAG has at least one.
 
-**✏️ Paper exercise 0.5:** Draw a DAG on 5 vertices {ρ, u, v, x, y} with edges ρ→u, ρ→v, u→x, v→x, u→y. What is the partial order? (List all pairs a ⪯ b.) Does x have a unique parent? What are all common ancestors of x and y? Which is the "lowest"? (This previews LCA sets in networks.)
+**✏️ Paper exercise 0.5:** Draw a DAG on 5 vertices {ρ, u, v, x, y} with edges ρ→u, ρ→v, u→x, v→x, u→y.
 
-**💻 NetworkX exercise 0.5:**
+(a) Does x have a unique parent?
+(b) List all common ancestors of x and y.
+(c) Which common ancestor is the "lowest" (closest to the leaves)? Is it unique?
+(d) Give a topological ordering.
 
-```python
-# Build a DAG (a simple network, not a tree — x has two parents)
-N = nx.DiGraph()
-N.add_edges_from([('rho','u'), ('rho','v'), ('u','x'), ('v','x'), ('u','y')])
-
-# Check it's a DAG
-print("Is DAG?", nx.is_directed_acyclic_graph(N))
-
-# Topological order
-print("Topological order:", list(nx.topological_sort(N)))
-
-# Find all ancestors of x
-ancestors_x = nx.ancestors(N, 'x')
-print("Ancestors of x:", ancestors_x)
-
-# Find all ancestors of y
-ancestors_y = nx.ancestors(N, 'y')
-print("Ancestors of y:", ancestors_y)
-
-# Common ancestors of x and y
-common = ancestors_x & ancestors_y
-print("Common ancestors of x and y:", common)
-
-# Parents of x (direct predecessors)
-print("Parents of x:", list(N.predecessors('x')))  # should be [u, v] — two parents!
-
-# Visualize
-pos = {'rho': (1, 3), 'u': (0.5, 2), 'v': (1.5, 2), 'x': (1, 1), 'y': (0, 1)}
-nx.draw(N, pos, with_labels=True, node_color='lightyellow', 
-        node_size=600, arrows=True, arrowsize=20)
-plt.show()
-```
+**💻 NetworkX exercise 0.5:** Build this DAG in NetworkX. Use `nx.is_directed_acyclic_graph()`, `nx.topological_sort()`, `nx.ancestors()`, and `N.predecessors()` to verify your paper answers. Confirm that x has two parents.
 
 ---
 
 ### 0.6 — Rooted Triples and the Aho Algorithm (~15 min)
 
-**📖 Reference reading:** The PeerJ paper "Speeding up iterative applications of the Build supertree algorithm" has a clean description of how the Aho/BUILD algorithm works (Section "The Build Algorithm"):
-https://peerj.com/articles/16624/ — read just the "Build Algorithm" section for a self-contained explanation with the cluster graph construction.
+**📖 Reference reading:** The PeerJ paper "Speeding up iterative applications of the Build supertree algorithm" has a clean description of the Aho/BUILD algorithm (Section "The Build Algorithm"):
+https://peerj.com/articles/16624/ — read just that section.
 
 **The idea.** A **rooted triple** ab|c (read: "a and b together, separate from c") is the simplest possible statement about tree structure. It says lca(a, b) is strictly below lca(a, c) = lca(b, c). In picture form: ((a, b), c) — a tiny tree where a and b share a more recent ancestor than either shares with c.
 
@@ -305,68 +200,56 @@ Triples are the atoms of tree structure. From a best match graph, you extract:
 - **Informative triples** R: if gene a sees b but not b' (same species as b), then ab|b' — a and b must be closer in any explaining tree.
 - **Forbidden triples** F: triples that must *not* appear in the explaining tree.
 
-A set of triples R is **consistent** if some tree displays all of them. The **Aho algorithm** (BUILD) checks this: construct a "cluster graph" where for each triple ab|c you add an undirected edge between a and b. If this graph is connected (one component), the triples are inconsistent. If it has multiple components, each component becomes a subtree, and you recurse. The result is the unique **least resolved tree**.
+A set of triples R is **consistent** if some tree displays all of them. The **Aho algorithm** (BUILD) checks this. Here's how it works:
+
+1. Build a "cluster graph": an *undirected* graph on the leaf set. For each triple ab|c, add an edge between a and b (the "close pair").
+2. Find connected components of this cluster graph.
+3. If there's only one component (everything is connected), the triples are **inconsistent** — stop.
+4. If there are multiple components, each becomes a child subtree of the current root. **Recurse** on each component with only the triples relevant to that component's leaves.
+5. Base case: ≤ 2 leaves → return them as a leaf or cherry.
+
+The result is the unique **least resolved tree** — the tree with as few internal vertices as possible that displays all the triples.
 
 **✏️ Paper exercise 0.6:** Given leaves {a, b, c, d} and triples R = {ab|c, ab|d}:
 
-(a) Draw the cluster graph (undirected, edge between the "close pair" of each triple).
+(a) Draw the cluster graph.
 (b) Find its connected components.
 (c) What tree does the Aho algorithm produce? Draw it.
 (d) Now add cd|a to R. Redraw the cluster graph. What happens? Is R still consistent?
 
-**💻 NetworkX exercise 0.6:**
+**💻 NetworkX exercise 0.6:** Implement the Aho algorithm. Here's the skeleton:
 
 ```python
-# Implement a toy version of the Aho algorithm
 def aho_build(leaves, triples):
     """
-    Given a set of leaves and a list of triples (a, b, c) meaning ab|c,
-    build the least resolved tree or return None if inconsistent.
+    leaves:  a set of leaf labels
+    triples: a list of tuples (a, b, c) meaning "ab|c"
+    Returns: a nested tuple representing the tree, or None if inconsistent.
     """
     if len(leaves) <= 2:
         return tuple(sorted(leaves))
     
-    # Build cluster graph: undirected edge between a and b for each ab|c
-    cluster = nx.Graph()
-    cluster.add_nodes_from(leaves)
-    relevant = [(a, b, c) for (a, b, c) in triples 
-                if a in leaves and b in leaves and c in leaves]
-    for (a, b, c) in relevant:
-        cluster.add_edge(a, b)
+    # Step 1: Build the cluster graph (undirected) on these leaves.
+    # For each triple (a,b,c) where all three are in `leaves`,
+    # add an undirected edge between a and b.
+    # YOUR CODE HERE
     
-    components = list(nx.connected_components(cluster))
+    # Step 2: Find connected components.
+    # If only one component → inconsistent, return None.
+    # YOUR CODE HERE
     
-    if len(components) == 1:
-        print(f"  INCONSISTENT at leaves {sorted(leaves)}")
-        return None  # all in one component → inconsistent
+    # Step 3: Recurse on each component.
+    # Only pass triples whose three leaves all belong to that component.
+    # Collect the results as children of the current node.
+    # YOUR CODE HERE
     
-    print(f"  Leaves {sorted(leaves)} split into {[sorted(c) for c in components]}")
-    
-    # Recurse on each component
-    children = []
-    for comp in components:
-        subtree = aho_build(comp, triples)
-        if subtree is None:
-            return None
-        children.append(subtree)
-    
-    return tuple(children)
-
-# Test 1: R = {ab|c, ab|d}
-print("=== Test 1: R = {ab|c, ab|d} ===")
-result = aho_build({'a','b','c','d'}, [('a','b','c'), ('a','b','d')])
-print("Tree:", result, "\n")
-
-# Test 2: add cd|a → R = {ab|c, ab|d, cd|a}
-print("=== Test 2: R = {ab|c, ab|d, cd|a} ===")
-result = aho_build({'a','b','c','d'}, [('a','b','c'), ('a','b','d'), ('c','d','a')])
-print("Tree:", result, "\n")
-
-# Test 3: inconsistent set
-print("=== Test 3 (inconsistent): R = {ab|c, bc|a, ca|b} ===")
-result = aho_build({'a','b','c'}, [('a','b','c'), ('b','c','a'), ('c','a','b')])
-print("Tree:", result)
+    pass
 ```
+
+Test cases:
+- `aho_build({'a','b','c','d'}, [('a','b','c'), ('a','b','d')])` should give a tree with {a,b} grouped.
+- `aho_build({'a','b','c','d'}, [('a','b','c'), ('a','b','d'), ('c','d','a')])` should give a fully resolved tree.
+- `aho_build({'a','b','c'}, [('a','b','c'), ('b','c','a'), ('c','a','b')])` should return `None` (inconsistent).
 
 ---
 
@@ -398,83 +281,68 @@ This ties everything together by walking through the central construction of the
 
 σ: a₁=red, b₁=blue, b₂=blue, c₁=green, c₂=green.
 
-**(a) On paper:** For each leaf x and each color s ≠ σ(x), find the best match(es). The rule: y is a best match of x in species s if lca(x, y) ⪯ lca(x, y') for all y' with σ(y') = s. Work it out systematically — start with a₁'s best matches in blue (compare lca(a₁, b₁) vs lca(a₁, b₂)), then a₁ in green, then b₁ in red, b₁ in green, etc. Draw the resulting digraph.
+**(a) On paper:** For each leaf x and each color s ≠ σ(x), find the best match(es). The rule: y is a best match of x in species s if lca(x, y) ⪯ lca(x, y') for all y' with σ(y') = s. In other words, there's no gene in the same species that has a *deeper* (closer to leaves) lca with x.
 
-**(b) In NetworkX:** Implement the computation and verify:
+Work through it systematically:
 
-```python
-T = nx.DiGraph()
-T.add_edges_from([
-    ('rho', 'u'), ('rho', 'v'),
-    ('u', 'a1'), ('u', 'w'),
-    ('w', 'b1'), ('w', 'c1'),
-    ('v', 'b2'), ('v', 'c2')
-])
-sigma = {'a1': 'red', 'b1': 'blue', 'b2': 'blue', 'c1': 'green', 'c2': 'green'}
-leaves = list(sigma.keys())
-root = 'rho'
+- a₁ in blue: compare lca(a₁, b₁) vs lca(a₁, b₂). Which is deeper?
+- a₁ in green: compare lca(a₁, c₁) vs lca(a₁, c₂).
+- b₁ in red: only one red vertex, so a₁ is automatically a best match.
+- b₁ in green: compare lca(b₁, c₁) vs lca(b₁, c₂).
+- Continue for b₂, c₁, c₂...
 
-def lca(T, root, x, y):
-    path_x = nx.shortest_path(T, root, x)
-    path_y = nx.shortest_path(T, root, y)
-    ancestor = root
-    for a, b in zip(path_x, path_y):
-        if a == b:
-            ancestor = a
-        else:
-            break
-    return ancestor
+Draw the resulting digraph (G, σ). Verify it is color-sink-free.
 
-def lca_depth(T, root, x, y):
-    return nx.shortest_path_length(T, root, lca(T, root, x, y))
-
-# Build the BMG
-BMG = nx.DiGraph()
-for node, color in sigma.items():
-    BMG.add_node(node, color=color)
-
-all_colors = set(sigma.values())
-for x in leaves:
-    for s in all_colors:
-        if s == sigma[x]:
-            continue
-        candidates = [y for y in leaves if sigma[y] == s]
-        best_depth = max(lca_depth(T, root, x, y) for y in candidates)
-        for y in candidates:
-            if lca_depth(T, root, x, y) == best_depth:
-                BMG.add_edge(x, y)
-
-print("BMG arcs:")
-for (u, v) in BMG.edges():
-    print(f"  {u} ({sigma[u]}) → {v} ({sigma[v]})")
-
-# Verify color-sink-free
-for x in leaves:
-    out_colors = {sigma[y] for y in BMG.successors(x)}
-    expected = all_colors - {sigma[x]}
-    assert out_colors == expected, f"{x} missing arcs to {expected - out_colors}"
-print("\n✓ BMG is color-sink-free")
-```
-
-**(c) Extract informative triples** and compare with your paper work:
+**(b) In NetworkX:** Write a function that takes a tree (T, σ) and computes its BMG. Here's the skeleton:
 
 ```python
-R = []
-for a in leaves:
-    for s in all_colors:
-        if s == sigma[a]:
-            continue
-        same_color = [y for y in leaves if sigma[y] == s]
-        if len(same_color) < 2:
-            continue
-        for b in same_color:
-            for b_prime in same_color:
-                if b == b_prime:
-                    continue
-                if BMG.has_edge(a, b) and not BMG.has_edge(a, b_prime):
-                    R.append((a, b, b_prime))
-                    print(f"  Informative triple: {a}{b}|{b_prime}")
+def compute_bmg(T, root, sigma):
+    """
+    T:     a nx.DiGraph representing a rooted tree (edges parent→child)
+    root:  the root vertex
+    sigma: dict mapping each leaf to its color
+    
+    Returns: a nx.DiGraph representing the BMG
+    """
+    leaves = list(sigma.keys())
+    all_colors = set(sigma.values())
+    BMG = nx.DiGraph()
+    for node, color in sigma.items():
+        BMG.add_node(node, color=color)
+    
+    # For each leaf x, for each color s ≠ σ(x):
+    #   1. Find all leaves y with σ(y) = s (the "candidates").
+    #   2. Compute lca_depth(x, y) for each candidate.
+    #      (lca_depth = distance from root to lca(x,y) — deeper = closer relative)
+    #   3. Find the maximum depth among candidates.
+    #   4. Add arc x→y for every candidate achieving that maximum.
+    # YOUR CODE HERE (use your lca function from 0.4)
+    
+    return BMG
 ```
+
+Verify your code produces the same arcs as your paper answer.
+
+**(c) Extract informative triples:** Write code to extract the informative triples R from the BMG. Recall: R = {ab|b' : σ(a) ≠ σ(b) = σ(b'), (a,b) ∈ E(G), (a,b') ∉ E(G)}.
+
+In words: if a has an arc to b but *not* to b' (where b and b' are the same color, different from a), then the triple ab|b' is informative.
+
+```python
+def extract_informative_triples(BMG, sigma):
+    """
+    Returns a list of tuples (a, b, b_prime) meaning "ab|b'"
+    """
+    # YOUR CODE HERE
+    pass
+```
+
+---
+
+**📺 Optional enrichment:** Reducible — "The Traveling Salesman Problem: When Good Enough Beats Perfect"
+https://www.youtube.com/watch?v=GiDsjIBOVoA
+Not directly needed for the project, but a beautifully produced video that shows how graph theory connects to hard combinatorial optimization. Good motivation for the "heuristic search" thinking you'll need in WP4.
+
+---
 
 If you got through all of WP0 — you have all the vocabulary. Now pick your specialist workpackage.
 
@@ -639,3 +507,343 @@ Overlaps are intentional: WP1 ∩ WP3 share the BMG definition (trees vs. networ
 ### Sync session after individual study
 
 Each person gives a ~10-minute presentation of their deliverable. Total: ~40 min plus discussion. After this, everyone can read both papers and tackle the full task list.
+
+---
+---
+
+## APPENDIX — Solutions
+
+**Try the exercises yourself first!** These solutions are for checking your work, not for skipping ahead.
+
+---
+
+### Solution 0.1 — Graphs
+
+```python
+G = nx.Graph()
+G.add_edges_from([('a','b'), ('b','c'), ('c','d'), ('d','e'), ('a','e'), ('b','d')])
+
+# (a) Degrees
+for v in sorted(G.nodes()):
+    print(f"deg({v}) = {G.degree(v)}")
+# a:2, b:3, c:2, d:3, e:2
+
+# (b) All paths from a to d
+for path in nx.all_simple_paths(G, 'a', 'd'):
+    print("Path a→d:", path)
+# a-b-c-d, a-b-d, a-e-d
+
+# (c) Connected
+print("Connected?", nx.is_connected(G))  # True
+
+# (d) One cycle: a-b-d-e-a
+
+# (e) Induced subgraph on {a,b,d,e}
+H = G.subgraph(['a', 'b', 'd', 'e'])
+print("Induced subgraph edges:", sorted(H.edges()))
+# Edges: (a,b), (a,e), (b,d), (d,e)
+
+nx.draw(G, with_labels=True, node_color='lightblue', node_size=500)
+plt.show()
+```
+
+---
+
+### Solution 0.2 — Digraphs
+
+```python
+D = nx.DiGraph()
+D.add_edges_from([(1,2), (1,3), (2,3), (3,4), (4,2)])
+
+# (a)
+for v in sorted(D.nodes()):
+    print(f"Vertex {v}: in-deg={D.in_degree(v)}, out-deg={D.out_degree(v)}, "
+          f"out-neighbors={sorted(D.successors(v))}")
+# 1: in=0, out=2, out-nbrs=[2,3]
+# 2: in=2, out=1, out-nbrs=[3]
+# 3: in=2, out=1, out-nbrs=[4]
+# 4: in=1, out=1, out-nbrs=[2]
+
+# (b) Vertex 1 is a source (in-degree 0). No sinks.
+print("Sources:", [v for v in D.nodes() if D.in_degree(v) == 0])  # [1]
+print("Sinks:", [v for v in D.nodes() if D.out_degree(v) == 0])    # []
+
+# (c) Weakly connected: yes. Strongly connected: no (can't reach 1 from anywhere).
+print("Weakly connected?", nx.is_weakly_connected(D))    # True
+print("Strongly connected?", nx.is_strongly_connected(D)) # False
+
+pos = nx.spring_layout(D, seed=42)
+nx.draw(D, pos, with_labels=True, node_color='lightcoral',
+        node_size=500, arrows=True, arrowsize=20)
+plt.show()
+```
+
+---
+
+### Solution 0.3 — Colored digraphs
+
+```python
+G = nx.DiGraph()
+colors = {'a1': 'red', 'a2': 'red', 'b1': 'blue', 'b2': 'blue', 'c1': 'green'}
+for node, color in colors.items():
+    G.add_node(node, color=color)
+
+G.add_edges_from([
+    ('a1','b1'), ('a1','c1'), ('a2','b2'), ('a2','c1'),
+    ('b1','a1'), ('b1','c1'), ('b2','a2'), ('b2','c1'),
+    ('c1','a1'), ('c1','b1')
+])
+
+def is_color_sink_free(G):
+    all_colors = set(nx.get_node_attributes(G, 'color').values())
+    for v in G.nodes():
+        v_color = G.nodes[v]['color']
+        reachable_colors = {G.nodes[u]['color'] for u in G.successors(v)}
+        missing = all_colors - {v_color} - reachable_colors
+        if missing:
+            print(f"  FAIL: {v} (color={v_color}) missing arcs to {missing}")
+            return False
+        else:
+            print(f"  OK:   {v} (color={v_color}) → all other colors")
+    return True
+
+print("Color-sink-free?", is_color_sink_free(G))
+
+node_colors_list = [colors[v] for v in G.nodes()]
+pos = nx.spring_layout(G, seed=7)
+nx.draw(G, pos, with_labels=True, node_color=node_colors_list,
+        node_size=600, arrows=True, arrowsize=15, font_weight='bold')
+plt.show()
+```
+
+---
+
+### Solution 0.4 — Rooted trees and lca
+
+```python
+T = nx.DiGraph()
+T.add_edges_from([
+    ('rho', 'u'), ('rho', 'v'),
+    ('u', 'a1'), ('u', 'w'),
+    ('w', 'b1'), ('w', 'c1'),
+    ('v', 'b2'), ('v', 'c2')
+])
+
+def lca(T, root, x, y):
+    path_x = nx.shortest_path(T, root, x)
+    path_y = nx.shortest_path(T, root, y)
+    ancestor = root
+    for a, b in zip(path_x, path_y):
+        if a == b:
+            ancestor = a
+        else:
+            break
+    return ancestor
+
+# (a) Ancestor order — comparable pairs share a root-to-leaf path
+# e.g. b1 ⪯ w ⪯ u ⪯ rho (all comparable)
+# but u and v are incomparable (neither is ancestor of the other)
+
+# (b) lca computations
+print("lca(a1, b1) =", lca(T, 'rho', 'a1', 'b1'))  # u  (speciation node)
+print("lca(b1, c2) =", lca(T, 'rho', 'b1', 'c2'))   # rho (deep split)
+print("lca(b1, b2) =", lca(T, 'rho', 'b1', 'b2'))   # rho (duplication — paralogs)
+
+# (c) Verify the inequality that drives best matches:
+depth_a1_b1 = nx.shortest_path_length(T, 'rho', lca(T, 'rho', 'a1', 'b1'))
+depth_a1_b2 = nx.shortest_path_length(T, 'rho', lca(T, 'rho', 'a1', 'b2'))
+print(f"\nlca(a1,b1) at depth {depth_a1_b1}, lca(a1,b2) at depth {depth_a1_b2}")
+print(f"lca(a1,b1) ⪯ lca(a1,b2)? depth {depth_a1_b1} >= {depth_a1_b2}: "
+      f"{depth_a1_b1 >= depth_a1_b2}")
+# depth 1 >= 0: True — so b1 is the best match, not b2
+
+# (d) Valid phylogenetic tree:
+for v in T.nodes():
+    children = list(T.successors(v))
+    if children:  # internal vertex
+        assert len(children) >= 2, f"{v} has only {len(children)} child"
+print("✓ Every internal vertex has ≥ 2 children")
+```
+
+---
+
+### Solution 0.5 — DAGs
+
+```python
+N = nx.DiGraph()
+N.add_edges_from([('rho','u'), ('rho','v'), ('u','x'), ('v','x'), ('u','y')])
+
+print("Is DAG?", nx.is_directed_acyclic_graph(N))  # True
+print("Topological order:", list(nx.topological_sort(N)))
+
+# (a) x has two parents
+print("Parents of x:", list(N.predecessors('x')))  # [u, v]
+
+# (b) Common ancestors of x and y
+ancestors_x = nx.ancestors(N, 'x')  # {rho, u, v}
+ancestors_y = nx.ancestors(N, 'y')  # {rho, u}
+common = ancestors_x & ancestors_y
+print("Common ancestors of x and y:", common)  # {rho, u}
+
+# (c) u is the lowest common ancestor (closer to leaves than rho)
+
+pos = {'rho': (1, 3), 'u': (0.5, 2), 'v': (1.5, 2), 'x': (1, 1), 'y': (0, 1)}
+nx.draw(N, pos, with_labels=True, node_color='lightyellow',
+        node_size=600, arrows=True, arrowsize=20)
+plt.show()
+```
+
+---
+
+### Solution 0.6 — Aho algorithm
+
+```python
+def aho_build(leaves, triples):
+    """
+    leaves:  a set of leaf labels
+    triples: a list of tuples (a, b, c) meaning "ab|c"
+    Returns: a nested tuple representing the tree, or None if inconsistent.
+    """
+    if len(leaves) <= 2:
+        return tuple(sorted(leaves))
+
+    # Build cluster graph
+    cluster = nx.Graph()
+    cluster.add_nodes_from(leaves)
+    relevant = [(a, b, c) for (a, b, c) in triples
+                if a in leaves and b in leaves and c in leaves]
+    for (a, b, c) in relevant:
+        cluster.add_edge(a, b)
+
+    components = list(nx.connected_components(cluster))
+
+    if len(components) == 1:
+        return None  # inconsistent
+
+    children = []
+    for comp in components:
+        subtree = aho_build(comp, triples)
+        if subtree is None:
+            return None
+        children.append(subtree)
+    return tuple(children)
+
+# Test 1: R = {ab|c, ab|d}
+print("Test 1:", aho_build({'a','b','c','d'}, [('a','b','c'), ('a','b','d')]))
+# Expected: (('a', 'b'), ('c', 'd'))
+
+# Test 2: add cd|a
+print("Test 2:", aho_build({'a','b','c','d'},
+                           [('a','b','c'), ('a','b','d'), ('c','d','a')]))
+# Expected: (('a', 'b'), ('c', 'd'))
+
+# Test 3: inconsistent
+print("Test 3:", aho_build({'a','b','c'},
+                           [('a','b','c'), ('b','c','a'), ('c','a','b')]))
+# Expected: None
+```
+
+---
+
+### Solution 0.8 — BMG construction
+
+**Paper answers:**
+
+| x | color s | candidates | lca depths | best match(es) |
+|---|---------|-----------|-----------|----------------|
+| a₁ | blue | b₁ (lca=u, depth 1), b₂ (lca=ρ, depth 0) | b₁ deeper | a₁→b₁ |
+| a₁ | green | c₁ (lca=u, depth 1), c₂ (lca=ρ, depth 0) | c₁ deeper | a₁→c₁ |
+| b₁ | red | a₁ (lca=u, depth 1) | only one | b₁→a₁ |
+| b₁ | green | c₁ (lca=w, depth 2), c₂ (lca=ρ, depth 0) | c₁ deeper | b₁→c₁ |
+| b₂ | red | a₁ (lca=ρ, depth 0) | only one | b₂→a₁ |
+| b₂ | green | c₁ (lca=ρ, depth 0), c₂ (lca=v, depth 1) | c₂ deeper | b₂→c₂ |
+| c₁ | red | a₁ (lca=u, depth 1) | only one | c₁→a₁ |
+| c₁ | blue | b₁ (lca=w, depth 2), b₂ (lca=ρ, depth 0) | b₁ deeper | c₁→b₁ |
+| c₂ | red | a₁ (lca=ρ, depth 0) | only one | c₂→a₁ |
+| c₂ | blue | b₁ (lca=ρ, depth 0), b₂ (lca=v, depth 1) | b₂ deeper | c₂→b₂ |
+
+**Code:**
+
+```python
+T = nx.DiGraph()
+T.add_edges_from([
+    ('rho', 'u'), ('rho', 'v'),
+    ('u', 'a1'), ('u', 'w'),
+    ('w', 'b1'), ('w', 'c1'),
+    ('v', 'b2'), ('v', 'c2')
+])
+sigma = {'a1': 'red', 'b1': 'blue', 'b2': 'blue', 'c1': 'green', 'c2': 'green'}
+leaves = list(sigma.keys())
+root = 'rho'
+
+def lca(T, root, x, y):
+    path_x = nx.shortest_path(T, root, x)
+    path_y = nx.shortest_path(T, root, y)
+    ancestor = root
+    for a, b in zip(path_x, path_y):
+        if a == b:
+            ancestor = a
+        else:
+            break
+    return ancestor
+
+def lca_depth(T, root, x, y):
+    return nx.shortest_path_length(T, root, lca(T, root, x, y))
+
+def compute_bmg(T, root, sigma):
+    leaves = list(sigma.keys())
+    all_colors = set(sigma.values())
+    BMG = nx.DiGraph()
+    for node, color in sigma.items():
+        BMG.add_node(node, color=color)
+
+    for x in leaves:
+        for s in all_colors:
+            if s == sigma[x]:
+                continue
+            candidates = [y for y in leaves if sigma[y] == s]
+            best_depth = max(lca_depth(T, root, x, y) for y in candidates)
+            for y in candidates:
+                if lca_depth(T, root, x, y) == best_depth:
+                    BMG.add_edge(x, y)
+    return BMG
+
+BMG = compute_bmg(T, root, sigma)
+
+print("BMG arcs:")
+for (u, v) in sorted(BMG.edges()):
+    print(f"  {u} ({sigma[u]}) → {v} ({sigma[v]})")
+
+# Verify color-sink-free
+all_colors = set(sigma.values())
+for x in leaves:
+    out_colors = {sigma[y] for y in BMG.successors(x)}
+    expected = all_colors - {sigma[x]}
+    assert out_colors == expected, f"{x} missing arcs to {expected - out_colors}"
+print("\n✓ BMG is color-sink-free")
+
+# Extract informative triples
+def extract_informative_triples(BMG, sigma):
+    leaves = list(sigma.keys())
+    all_colors = set(sigma.values())
+    R = []
+    for a in leaves:
+        for s in all_colors:
+            if s == sigma[a]:
+                continue
+            same_color = [y for y in leaves if sigma[y] == s]
+            if len(same_color) < 2:
+                continue
+            for b in same_color:
+                for b_prime in same_color:
+                    if b == b_prime:
+                        continue
+                    if BMG.has_edge(a, b) and not BMG.has_edge(a, b_prime):
+                        R.append((a, b, b_prime))
+    return R
+
+R = extract_informative_triples(BMG, sigma)
+print("\nInformative triples:")
+for (a, b, bp) in R:
+    print(f"  {a}{b}|{bp}")
+```
