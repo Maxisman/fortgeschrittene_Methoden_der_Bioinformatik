@@ -12,8 +12,3 @@ HostName github.com
 IdentityFile \~/.ssh/NAME\_EURES\_PRIVATE\_KEY\_FILE
 IdentitiesOnly yes
 * Dann könnt ihr das repo mit git clone git@github.com:Maxisman/fortgeschrittene\_Methoden\_der\_Bioinformatik.git klonen
-
-
-
-Test Test
-
