@@ -29,8 +29,9 @@ import matplotlib.pyplot as plt
 
 ### 0.1 — Graphs: Vertices, Edges, Neighborhoods (~15 min)
 
-**📺 Watch:** "Graph Theory: An Introduction to Key Concepts" by Sarada Herke — first 10 minutes cover vertices, edges, degree, adjacency.
-https://www.youtube.com/watch?v=HmQR8Xy9DeM
+**📺 Watch:** Reducible — "Introduction to Graph Theory: A Computer Science Perspective"
+https://www.youtube.com/watch?v=LFKZLXVO-Dg
+Watch up to about the 10-minute mark. Covers vertices, edges, degree, adjacency, graph types (directed, weighted, bipartite), and graph representations as data structures (adjacency lists, adjacency matrices). Beautifully animated — the Sudoku-as-graph example is a great hook.
 
 **The idea in a nutshell.** A **graph** G = (V, E) is a set V of **vertices** (dots) and a set E of **edges** (lines between pairs of dots). Two vertices connected by an edge are **adjacent** or **neighbors**. The **degree** of a vertex is how many edges touch it. A **path** is a sequence of distinct vertices where consecutive ones are connected by edges. A graph is **connected** if every pair of vertices is linked by some path. A maximal connected piece is a **connected component**.
 
@@ -54,8 +55,10 @@ A **bipartite graph** splits its vertices into two groups with every edge going 
 
 ### 0.2 — Directed Graphs (Digraphs) (~10 min)
 
-**📺 Watch:** "NetworkX Crash Course — Graph Theory in Python" by NeuralNine (first 15 min, covers both undirected and directed graphs in NetworkX with live coding):
-https://www.youtube.com/watch?v=VetBkjcm9Go
+**📺 Watch:** Continue the Reducible intro video from 0.1 (the section on directed and weighted graphs), then watch Reducible — "Depth First Search (DFS) Explained: Algorithm, Examples, and Code" — the first ~8 minutes, which give a clear visual introduction to how you traverse a directed graph by following arrows:
+https://www.youtube.com/watch?v=PMMc4VsIacU
+
+DFS matters here because it's exactly how algorithms walk through rooted trees (from root toward leaves), which is the core operation in everything from lca computation to the Aho algorithm.
 
 **The idea.** In a **directed graph** (digraph), every edge has a direction — it's an arrow from a start vertex to an end vertex. We write (x, y) or x → y for an arc from x to y. Each vertex now has an **in-degree** (arrows coming in) and an **out-degree** (arrows going out). The **out-neighborhood** N⁺(x) is the set of vertices that x points to. A vertex with out-degree 0 is a **sink** (no arrows leaving); one with in-degree 0 is a **source** (no arrows arriving).
 
@@ -95,25 +98,34 @@ Every best match graph is color-sink-free by construction (every gene has a clos
 
 ---
 
-### 0.4 — Rooted Trees, Children, Ancestors, lca (~20 min)
+### 0.4 — Rooted Trees as Graphs: Translating What You Know (~20 min)
 
-**📺 Watch:** Khan Academy — "Understanding and building phylogenetic trees" (~6 min, excellent biological motivation for rooted trees, ancestor relationships, and reading tree diagrams):
-https://www.khanacademy.org/science/hs-biology/x4c673362230887ef:evolution-and-natural-selection/x4c673362230887ef:evidence-of-common-ancestry/v/understanding-and-building-phylogenetic-trees-or-cladograms
+**No intro-to-phylogenetics videos needed — you've all taken the course.** This section is about connecting the biology you already know to the graph-theory vocabulary from the previous sections, and making it precise enough to code against.
 
-**📖 Then read:** This Nature Scitable primer (~10 min) — defines root, branch, node, clade, and last common ancestor with clear figures:
-https://www.nature.com/scitable/topicpage/reading-a-phylogenetic-tree-the-meaning-of-41956/
+**The translation table.** Everything you know from phylogenetics has a graph-theory name:
 
-**The idea.** A **tree** is a connected graph with no cycles. A **rooted tree** picks one vertex as the **root** (drawn at top). Every other vertex has a unique **parent** (next vertex toward root) and zero or more **children** (one step away from root). Vertices with no children are **leaves**; all others are **internal**.
+| Phylogenetics term | Graph theory term | Formal definition |
+|---|---|---|
+| Rooted phylogenetic tree | Rooted tree T = (V, E) with root ρ | Connected DAG where every vertex has exactly one parent, except ρ which has none. Equivalently: a connected graph with no cycles, plus a designated root. |
+| Tips / extant taxa / OTUs | **Leaves** L ⊆ V | Vertices with out-degree 0 (no children). |
+| Internal nodes / HTUs | **Internal vertices** V \ L | Vertices with ≥ 1 child. In a phylogenetic tree specifically: every internal vertex has ≥ 2 children (no pass-through nodes). |
+| Parent branch / ancestor | **Parent**, **ancestor order** ⪯ | parent(v) is the unique vertex one step toward the root. x ⪯ y means y is on the path from x to ρ (y is an ancestor of x). |
+| Children / descendant lineages | **Children** child(v) | The set of vertices one step away from the root through v. |
+| MRCA of a clade | **lca(x, y)** | The ⪯-maximal vertex that is an ancestor of both x and y. Unique in trees. |
+| Clade / monophyletic group | **Subtree** T(v) | All leaves descended from internal vertex v. The set of these leaf-sets forms a **hierarchy**. |
+| Species label on a gene tree | **Leaf coloring** σ: L → S | A surjective map assigning each leaf (gene) to a color (species). Multiple leaves can share a color — that's gene duplication. |
 
-The **ancestor order** ⪯: x ⪯ y means "y is on the path from x up to the root" (y is an ancestor of x). Leaves are minimal; the root is the unique maximum.
+**The key new object: (T, σ).** You're used to species trees where each tip is a distinct species, and gene trees where tips are genes. Here we combine both into a single structure: a gene tree T where every leaf x carries a species label σ(x). The pair (T, σ) is a **leaf-colored tree**. This is the input from which best match graphs are derived.
 
-The **last common ancestor** lca(x, y) is the deepest vertex that is an ancestor of both x and y. In a tree, this is always unique.
+**What's different from your phylogenetics course.** Three things to watch out for:
 
-A **phylogenetic tree** requires that every internal vertex has ≥ 2 children (no "pass-through" nodes with one child).
+1. **lca as a formal operator, not just a concept.** In the papers, lca(x, y) is used in inequalities (lca(x,y) ⪯ lca(x,y')), compared across pairs, and fed into algorithms. You need to think of it as a computable function, not just "the node where two lineages meet."
 
-A **leaf-colored tree** (T, σ) assigns each leaf a color (= species). Multiple leaves can share a color — that represents gene duplication.
+2. **The ancestor order ⪯ is a partial order.** This connects directly to Section 0.5 (DAGs). In a tree, ⪯ is a total order along any root-to-leaf path, but incomparable across different branches. When we move to networks, ⪯ stays a partial order but lca is no longer unique — that's where things get hard.
 
-**✏️ Paper exercise 0.4:** Draw this tree:
+3. **Trees are directed graphs.** You'll store them as `nx.DiGraph` with edges pointing from parent to child. This means all the digraph tools from Section 0.2 apply: `predecessors()` gives the parent, `successors()` gives children, DFS from the root visits every vertex.
+
+**✏️ Paper exercise 0.4:** Consider this gene tree with species map:
 
 ```
          ρ
@@ -125,12 +137,12 @@ A **leaf-colored tree** (T, σ) assigns each leaf a color (= species). Multiple 
        b₁  c₁
 ```
 
-Colors: a₁ = red, b₁ = blue, b₂ = blue, c₁ = green, c₂ = green.
+σ: a₁ = red, b₁ = blue, b₂ = blue, c₁ = green, c₂ = green. (Three species, five genes — there was a duplication in both blue and green.)
 
-(a) List the parent and children of every vertex.
-(b) Compute lca(a₁, b₁), lca(b₁, c₂), lca(a₁, c₁).
-(c) Is it a phylogenetic tree? (Does every internal vertex have ≥ 2 children?)
-(d) Which leaves are "closest relatives" of a₁ in terms of lca depth?
+(a) Write out the ancestor order ⪯ restricted to the leaves and internal vertices u, w, v. Which pairs are comparable? Which are incomparable?
+(b) Compute lca(a₁, b₁), lca(b₁, c₂), lca(b₁, b₂). For the last one: these are paralogs in the same species — what does their lca represent biologically?
+(c) Verify that lca(a₁, b₁) ⪯ lca(a₁, b₂). This inequality is exactly what makes b₁ (not b₂) the best match of a₁ in species blue.
+(d) Is this a valid phylogenetic tree in the sense used by the papers? (Every internal vertex has ≥ 2 children, σ is surjective onto S = {red, blue, green}.)
 
 **💻 NetworkX exercise 0.4:** Build this tree as a `DiGraph` (edges from parent to child). Then write a function `lca(T, root, x, y)` that finds the last common ancestor of two leaves.
 
@@ -155,8 +167,9 @@ Test it on the three pairs from the paper exercise.
 
 ### 0.5 — Partial Orders and DAGs (~10 min)
 
-**📺 Watch:** "Directed Acyclic Graphs (1) — Introduction to DAGs" by Nick Huntington-Klein (~10 min, clear visual introduction to DAG structure, paths, and terminology):
-https://www.youtube.com/watch?v=PiekvYYHeVQ
+**📺 Watch:** Reducible — "Breadth First Search (BFS): Visualized and Explained" — first ~8 minutes:
+https://www.youtube.com/watch?v=xlVX7dXLS64
+BFS explores a graph level by level. This is directly relevant to DAGs: a BFS from the root of a phylogenetic network visits vertices in order of their depth, which is how you reason about "closeness" in networks. The contrast with DFS (from 0.2) is also useful — DFS goes deep, BFS goes wide.
 
 **The idea.** A **partial order** ⪯ on a set is reflexive (x ⪯ x), antisymmetric (x ⪯ y and y ⪯ x ⟹ x = y), and transitive (x ⪯ y ⪯ z ⟹ x ⪯ z). The ancestor order on a tree is a partial order. A **directed acyclic graph (DAG)** is a digraph with no directed cycles. Every DAG defines a partial order via reachability (x ⪯ y iff there's a directed path from x to y, or x = y).
 
@@ -322,6 +335,12 @@ def extract_informative_triples(BMG, sigma):
     # YOUR CODE HERE
     pass
 ```
+
+---
+
+**📺 Optional enrichment:** Reducible — "The Traveling Salesman Problem: When Good Enough Beats Perfect"
+https://www.youtube.com/watch?v=GiDsjIBOVoA
+Not directly needed for the project, but a beautifully produced video that shows how graph theory connects to hard combinatorial optimization. Good motivation for the "heuristic search" thinking you'll need in WP4.
 
 ---
 
@@ -610,13 +629,6 @@ T.add_edges_from([
     ('v', 'b2'), ('v', 'c2')
 ])
 
-# Parent/children listing
-for v in T.nodes():
-    parents = list(T.predecessors(v))
-    children = list(T.successors(v))
-    print(f"{v}: parent={parents if parents else 'none (root)'}, "
-          f"children={children if children else '(leaf)'}")
-
 def lca(T, root, x, y):
     path_x = nx.shortest_path(T, root, x)
     path_y = nx.shortest_path(T, root, y)
@@ -628,19 +640,29 @@ def lca(T, root, x, y):
             break
     return ancestor
 
-# (b) lca computations
-print("\nlca(a1, b1) =", lca(T, 'rho', 'a1', 'b1'))  # u
-print("lca(b1, c2) =", lca(T, 'rho', 'b1', 'c2'))    # rho
-print("lca(a1, c1) =", lca(T, 'rho', 'a1', 'c1'))    # u
+# (a) Ancestor order — comparable pairs share a root-to-leaf path
+# e.g. b1 ⪯ w ⪯ u ⪯ rho (all comparable)
+# but u and v are incomparable (neither is ancestor of the other)
 
-# (d) Closest relatives of a1
-leaves = ['a1', 'b1', 'b2', 'c1', 'c2']
-for leaf in leaves:
-    if leaf != 'a1':
-        a = lca(T, 'rho', 'a1', leaf)
-        depth = nx.shortest_path_length(T, 'rho', a)
-        print(f"lca(a1, {leaf}) = {a} at depth {depth}")
-# b1 and c1 are closest (lca=u at depth 1); b2 and c2 are farther (lca=rho at depth 0)
+# (b) lca computations
+print("lca(a1, b1) =", lca(T, 'rho', 'a1', 'b1'))  # u  (speciation node)
+print("lca(b1, c2) =", lca(T, 'rho', 'b1', 'c2'))   # rho (deep split)
+print("lca(b1, b2) =", lca(T, 'rho', 'b1', 'b2'))   # rho (duplication — paralogs)
+
+# (c) Verify the inequality that drives best matches:
+depth_a1_b1 = nx.shortest_path_length(T, 'rho', lca(T, 'rho', 'a1', 'b1'))
+depth_a1_b2 = nx.shortest_path_length(T, 'rho', lca(T, 'rho', 'a1', 'b2'))
+print(f"\nlca(a1,b1) at depth {depth_a1_b1}, lca(a1,b2) at depth {depth_a1_b2}")
+print(f"lca(a1,b1) ⪯ lca(a1,b2)? depth {depth_a1_b1} >= {depth_a1_b2}: "
+      f"{depth_a1_b1 >= depth_a1_b2}")
+# depth 1 >= 0: True — so b1 is the best match, not b2
+
+# (d) Valid phylogenetic tree:
+for v in T.nodes():
+    children = list(T.successors(v))
+    if children:  # internal vertex
+        assert len(children) >= 2, f"{v} has only {len(children)} child"
+print("✓ Every internal vertex has ≥ 2 children")
 ```
 
 ---
@@ -708,14 +730,12 @@ def aho_build(leaves, triples):
 
 # Test 1: R = {ab|c, ab|d}
 print("Test 1:", aho_build({'a','b','c','d'}, [('a','b','c'), ('a','b','d')]))
-# Expected: (('a', 'b'), ('c', 'd'))  — {a,b} grouped, {c,d} are separate leaves
-# (c and d end up in one component because they have no edges in the cluster graph,
-#  but since they're singletons they get grouped by default)
+# Expected: (('a', 'b'), ('c', 'd'))
 
 # Test 2: add cd|a
 print("Test 2:", aho_build({'a','b','c','d'},
                            [('a','b','c'), ('a','b','d'), ('c','d','a')]))
-# Expected: (('a', 'b'), ('c', 'd'))  — now c-d are explicitly grouped too
+# Expected: (('a', 'b'), ('c', 'd'))
 
 # Test 3: inconsistent
 print("Test 3:", aho_build({'a','b','c'},
