@@ -23,6 +23,14 @@ Edges are usually referred to as a pair of vertices. Vertices and Edges are pres
 2. Removing edge disconnects graph
 3. adding edge creates a cycle
 
+### Graph representations 
+Adjacency matrix
+$$A_{ij}=\begin{cases}1\text{ for ege }(i,j)\\ 0\text{ otherwiese} \end{cases}
+$$
+Edge set:
+List of edges inside a set
+Adjacency List: One list per vertex, the list contains all the vertices that have a direct edge to that vertex
+
 Exercise 01:
 Ich musste zusätzlich noch das package: `PyQt6` installieren
 Ergebnis:
