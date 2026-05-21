@@ -1,0 +1,6 @@
+- pull up
+- pull down
+- remove redundant vertices
+- remove hybrid vertices
+- pull something into an edge creating a new vertex
+(- form transitive reduction)

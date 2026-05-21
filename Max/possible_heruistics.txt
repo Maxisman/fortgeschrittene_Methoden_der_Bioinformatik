@@ -1,0 +1,13 @@
+Measuring Tree-Likeness:
+- sum of in-degrees -> = sum of edges
+- average in-degree per node (we need to discount useless nodes like a-b-c (b))
+- number of cycles?
+- number of hybrid vertices (reticulation vertices)
+- number of edges - (number of reasonable internal nodes * 2) X
+=> every reasonable internal node has at least two out-edges so we do not want to discourage the algorithm from creating neccessary nodes. A reasonable internal node is one with at least two out-edges
+
+Possible Heuristics:
+- greedy
+- beam search (preferred)
+-> analyze when it fails
+- random search (propability of move proportional to value of move) (maybe this tho)
