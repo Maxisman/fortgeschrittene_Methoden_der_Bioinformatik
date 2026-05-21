@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 def lca(T, root, x, y):
     path_x = nx.shortest_path(T, root, x)
     path_y = nx.shortest_path(T, root, y)
+
     # Walk both paths from the root.
     # As long as they agree, track the current vertex.
     # The last vertex where they agree is the lca.
@@ -55,6 +56,20 @@ def compute_bmg(T, root, sigma):
 
     return BMG
 
+def extract_informative_triples(BMG, sigma):
+    """
+    Returns a list of tuples (a, b, b_prime) meaning "ab|b'"
+    """
+    triples = []
+    nodes = BMG.nodes()
+    for a in nodes:
+        successors = list(BMG.successors(a))
+        for b in successors:
+            for b_prime in nodes:
+                if sigma[b] == sigma[b_prime] and not b_prime in successors:
+                    triples.append((a,b,b_prime))
+    return triples
+
 G = nx.DiGraph()
 G.add_node("b1",color="b")
 G.add_node("b2",color="b")
@@ -65,5 +80,8 @@ G.add_edges_from([("roh", "u"), ("u", "a1"), ("u", "w"), ("w", "b1"), ("w", "c1"
 #nx.draw(G, with_labels=True)
 #plt.show()
 
-nx.draw(compute_bmg(G, "roh", {"a1" : "g", "b1":"b", "b2":"b", "c1":"r", "c2":"r"}), with_labels=True)
+sigma = {"a1" : "g", "b1":"b", "b2":"b", "c1":"r", "c2":"r"}
+BMG = compute_bmg(G, "roh", sigma)
+print(extract_informative_triples(BMG, sigma))
+nx.draw(BMG, nx.kamada_kawai_layout(G), with_labels=True)
 plt.show()
