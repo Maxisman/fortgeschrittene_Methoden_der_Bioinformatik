@@ -1,7 +1,8 @@
 # WP0 Graph Theory
-## Video Reducible — "Introduction to Graph Theory: A Computer Science Perspective"
+## 01 Graphs
+### Video Reducible — "Introduction to Graph Theory: A Computer Science Perspective"
 https://www.youtube.com/watch?v=LFKZLXVO-Dg
-### Layman's Definition of a Graph
+#### Layman's Definition of a Graph
 Network that helps define and visualize relationships (edges) between various components (vertices or nodes)
 A graph $G=(V,E)$ is a set of vertices $V$ and edges $E$ where each edge $(u,v)$ is a connection between vertices $u,v\in V$.
 Edges are usually referred to as a pair of vertices. Vertices and Edges are presented using set notations.
@@ -12,7 +13,7 @@ Edges are usually referred to as a pair of vertices. Vertices and Edges are pres
 **Connectivity**: two vertices are *connected* if a path exists between them. A graph is called *connected* when all vertices are connected.
 **Connected Component**: a subset of vertices $V_i\subseteq V$ that is connected
 
-### Types of Graphs
+#### Types of Graphs
 **Undirected graph**: Edge $(u,v)$ implies $(v,u)$
 **Directed graph**: Edges are unidirectional
 - Directed cyclic graph: with cycle
@@ -23,7 +24,7 @@ Edges are usually referred to as a pair of vertices. Vertices and Edges are pres
 2. Removing edge disconnects graph
 3. adding edge creates a cycle
 
-### Graph representations 
+#### Graph representations 
 Adjacency matrix
 $$A_{ij}=\begin{cases}1\text{ for ege }(i,j)\\ 0\text{ otherwiese} \end{cases}
 $$
@@ -31,7 +32,7 @@ Edge set:
 List of edges inside a set
 Adjacency List: One list per vertex, the list contains all the vertices that have a direct edge to that vertex
 
-Exercise 01:
+### Exercise 01:
 Ich musste zusätzlich noch das package: `PyQt6` installieren
 Ergebnis:
 ![[Graph_WP0_01.png|350]]
@@ -39,3 +40,61 @@ Ergebnis:
 Das hat für mich noch nicht funktioniert:
 Use `G.degree()`, `nx.all_simple_paths()`, `nx.is_connected()`, and `G.subgraph()` to verify your paper answers.
 Die Funktionen scheinen was zu machen, aber es wird nicht geprinted. Funktioniert vielleicht besser in Jupyter?
+
+## 02 Directed Graphs
+### Video Reducible — "Depth First Search (DFS) Explained: Algorithm, Examples, and Code"
+https://www.youtube.com/watch?v=PMMc4VsIacU
+
+**Graph Traversal**: algorithm to visit every vertex of a graph
+**DFS algorithm**: Continue looking for new vertices until you hit a dead end, then retrace steps until you find a new vertex.
+
+**Directed Graph**: Each vertex has an **in-degree** (arrows coming in) and an **out-degree** (arrows going out). 
+**Out-neighborhood**: N⁺(x) is the set of vertices that x points to. 
+**Sink**: vertex with out-degree zero (no arrows leaving).
+**Source**: vertex with in-degree 0 (no arrows arriving).
+**Weakly connected**: Only connected if you ignore arrow directions
+**Strongly connected**: A directed path between every ordered pair of vertices exists.
+
+### Exercise 02:
+Output from Code:
+```
+In Degree of directed Graph:
+ [('1', 0), ('2', 2), ('3', 2), ('4', 1)]
+Out Degree of directed Graph:
+ [('1', 2), ('2', 1), ('3', 1), ('4', 1)]
+Out-neighborhood of directed Graph:
+ [['2', '3'], ['3'], ['4'], ['2']]
+The graph is weakly connected:  True
+The graph is strongly connected:  False
+```
+
+## 03 Colored Digraphs
+Vertices: represent genes
+colors: represent species
+**vertex coloring**: σ assigns each vertex a color from a set S
+**colored digraph G, σ)**: only has edges between vertices (genes) of *different* colors (species) (no connection between two genes from the same species).
+
+**Properties of Best Match Graphs**:
+- Sink-free: Each vertex has at least one outgoing edge
+- Color-sink-free: Each gene of a species is connected to at least one other gene of a different species. Formally: for every vertex $x$ and every color $s \ne \sigma(x)$, there exists at least one edge from $x$ to some vertex of color $s$.
+  This can be even stronger: at least one edge to every other species
+
+Every best match graph is color-sink-free by construction (every gene has a closest relative in every other species).
+
+## 04 Rooted trees as graphs
+- **Paralogs:** Related genes separated by gene duplication within the **same** organism.
+- **Orthologs:** Related genes separated by a speciation event; they exist in **different** organisms but perform similar roles.
+- **Homologs:** The overarching, general term for any two genes derived from a common ancestral gene (this covers both paralogs and orthologs). 
+
+## 05 Partial Orders and DAGs 
+### Video Reducible — "Breadth First Search (BFS): Visualized and Explained"
+https://www.youtube.com/watch?v=xlVX7dXLS64
+First visit the vertices with distance 1 of a chosen vertex. Continue with visiting all vertices with distance two, and so on.
+
+### Partial order
+A partial order is
+- reflexive: $x\le x$
+- antisymmetric: $x\le y$ and $y\le x \Rightarrow x=y$ 
+- transitive: $x\le y\le z \Rightarrow x\le z$
+**Directed acyclic graph** (DAG): digraph with no directed cycles. Every DAG defines a partial order via reachability ($x\le y$ if there is a directed path from $x$ to $y$ or $x=y$). Phylogenetic trees are DAGs.
+
