@@ -1,4 +1,4 @@
-git #%%
+#%%
 import networkx as nx
 import matplotlib.pyplot as plt
 #%%
@@ -12,6 +12,7 @@ G.add_nodes_from(verteces)
 G.add_edges_from(edges)
 
 nx.draw(G,with_labels=True)
+print(nx.cycle_basis(G))
 #%%
 G.degree()
 paths = nx.all_simple_paths(G,"a","e")
@@ -77,3 +78,19 @@ def lca(T,root,x,y):
         else:
             break
     return ancestor
+
+#wp 0.5
+#%%
+import networkx as nx
+verteces = ["p","u","v","x","y"]
+edges = [("p","u"),("p","v"),("u","x"),("v","x"),("u","y")]
+
+G = nx.DiGraph()
+G.add_nodes_from(verteces)
+G.add_edges_from(edges)
+#nx.draw(G,with_labels=True)
+nx.is_directed_acyclic_graph(G)
+for i in nx.topological_sort(G):
+    print(i)
+
+set(nx.ancestors(G,"x")) & set(nx.ancestors(G,"y"))
