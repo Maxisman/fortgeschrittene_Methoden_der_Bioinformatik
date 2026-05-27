@@ -98,3 +98,9 @@ A partial order is
 - transitive: $x\le y\le z \Rightarrow x\le z$
 **Directed acyclic graph** (DAG): digraph with no directed cycles. Every DAG defines a partial order via reachability ($x\le y$ if there is a directed path from $x$ to $y$ or $x=y$). Phylogenetic trees are DAGs.
 
+# WP 1 Best Match Graphs
+
+
+Figure from [Geiß et al 2019](https://link.springer.com/article/10.1007/s00285-019-01332-9#Fig1)
+![[Pasted image 20260526111110.png]]
+An evolutionary scenario (left) consists of a gene tree whose inner vertices are marked by the event type ( for speciations, for gene duplications, and for gene loss) together with its embedding into a species tree (drawn as tube-like outline). All events are placed on a time axis. The middle panel shows the observable part of the gene tree ; it is obtained from the gene tree in the full evolutionary scenario by removing all leaves marked as loss events and suppression of all resulting degree two vertices. The r.h.s. panel shows the colored best match graph that is explained by . Directed arcs indicate the best match relation . Bi-directional best matches ( and ) are drawn as solid lines without arrow heads instead of pairs of arrows. Dotted circles collect sets of leaves that have the same in- and out-neighborhood. The corresponding arcs are shown only once.
