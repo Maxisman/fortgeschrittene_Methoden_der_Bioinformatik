@@ -21,13 +21,16 @@ print(paths)
 
 #%%
 #0.2
+import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
 V = [1,2,3,4]
 E = [(1,2),(1,3),(2,3),(3,4),(4,2)]
 G = nx.DiGraph()
 G.add_nodes_from(V)
 G.add_edges_from(E)
 nx.draw(G,with_labels=True)
-
+plt.show()
 #%%
 G.in_degree(1)
 G.out_degree(1)
@@ -60,6 +63,8 @@ for node in G_colored.nodes():
         print(f"{node} passes")
 #%%
 #0.4
+import networkx as nx
+
 
 Nodes = ["p","u","v","a_1","w","b_1","c_1","v","b_2","c_2"]
 Edges = [("p","u"),("u","a_1"),("u","w"),("w","b_1"),("w","c_1"),("p","v"),("v","b_2"),("v","c_2")]
