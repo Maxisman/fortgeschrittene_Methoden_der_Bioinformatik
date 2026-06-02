@@ -1,5 +1,6 @@
 import networkx as nx
 from graph_functionality import *
+import random
 
 
 def pull_up (G:nx.DiGraph, child, parent, grandparent):
@@ -11,7 +12,7 @@ def pull_up (G:nx.DiGraph, child, parent, grandparent):
     
     G.remove_edge(parent, child)
     G.add_edge(grandparent, child)
-    
+
     return G
 
 def pull_down (G:nx.DiGraph, child, parent, new_parent):
@@ -62,6 +63,22 @@ def remove_redundant_vertices(G:nx.DiGraph): #make function more robust
                     removal.append(node2)
     for node in removal:
         G.remove_node(node)
+
+def remove_hybrid_edge(G:nx.DiGraph, node, parent=None):
+    """
+    removes an edge of a hybrid node. When parent is not given a random edge is removed
+    """
+    if G.in_degree(node) <= 1:
+        raise ValueError("Cannot remove edges from vertices with in-degree 0 or 1")
+    
+    if parent == None:
+        parents = G.predecessors(node)
+        parent = random.sample(parents, 1) #do we want randomness?
+    
+    G.remove_edge(parent, node)
+    
+def remove_node(G:nx.DiGraph, node):
+    G.remove_node(node)
 
 
 
