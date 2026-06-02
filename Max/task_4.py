@@ -113,13 +113,33 @@ def pull_down (G:nx.DiGraph, child, parent, new_parent):
     """
     pulls down node child (which is a child of parent to a node new_parent which must be a child of parent
     """
+    # if asked to pull down to a leave it pulls down to the edge instead
+    if G.out_degree(new_parent) == 0:
+        pull_down_edge(G, child, parent, new_parent)
+        return
+    
     if not (child in list(G.successors(parent)) and new_parent in list(G.successors(parent))):
         raise ValueError("Child not a child of parent or new_parent not a child of parent")
-    
+
     G.remove_edge(parent, child)
     G.add_edge(new_parent, child)
 
     return G
+
+def pull_down_edge(G:nx.DiGraph, child, node_origin, node_target):
+    """
+    pulls down node child (which is a child of node_origin) to the edge node_origin - node_target
+    """
+    if not (child in list(G.successors(node_origin)) and node_target in list(G.successors(node_origin))):
+        raise ValueError("Child not a child of node_origin or node_target not a child of node_origin")
+    
+    new_node_name = "p_" + str(child) + "_" + str(node_target)
+    G.add_node(new_node_name)
+    G.remove_edge(node_origin, child)
+    G.remove_edge(node_origin, node_target)
+    G.add_edge(node_origin, new_node_name)
+    G.add_edge(new_node_name, child)
+    G.add_edge(new_node_name, node_target)
 
 def remove_redundant_vertices(G:nx.DiGraph): #make function more robust
     removal = []
@@ -184,5 +204,7 @@ original = G
 # break bmg
 G = deepcopy(original)
 pull_up(G, "a1", "u", "roh")
+print(G.edges)
+pull_down(G, "w", "u", "c1")
 print(graphs_equal(compute_bmg(original, "roh", sigma), compute_bmg(G, "roh", sigma)))
 display_multiple_trees([original, G], sigma)
