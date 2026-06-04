@@ -1,15 +1,15 @@
 import random
 import networkx as nx
 
-def insertHybrid(DiGraph):
+def insertHybrid(N:nx.DiGraph) -> nx.DiGraph:
     # n einfügen? um mehrere Hybridization events zuzlassen?
 
     # max label herausfinden
-    label = max(nx.get_node_attributes(DiGraph,"label").values())+1
+    label = max(nx.get_node_attributes(N,"label").values())+1
 
     # über max(dist) den Zeitbereich herausfinden
 
-    timerange = max(nx.get_node_attributes(DiGraph,"tstamp").values())
+    timerange = max(nx.get_node_attributes(N,"tstamp").values())
 
     # random Zeitpunkt auswählen
 
@@ -17,7 +17,7 @@ def insertHybrid(DiGraph):
 
     # edges finden, die zu dieser Zeit existiert haben.
 
-    possibleEdges = set(edge for edge in DiGraph.edges if DiGraph.nodes[edge[0]]["tstamp"] >= time and DiGraph.nodes[edge[1]]["tstamp"] <= time)
+    possibleEdges = set(edge for edge in N.edges if N.nodes[edge[0]]["tstamp"] >= time and N.nodes[edge[1]]["tstamp"] <= time)
 
     # eine zufällige Edge auswählen, diese durch einen Hybrid erweitern.
     # remove_edge(Parent,Child) 
@@ -30,10 +30,10 @@ def insertHybrid(DiGraph):
     edges = random.sample(sorted(possibleEdges),2)
 
     # Ausgangsspezies bestimmen
-    # parentspecies = [DiGraph.nodes[parent[0]]["reconc"] for parent in edges]
+    # parentspecies = [N.nodes[parent[0]]["reconc"] for parent in edges]
 
     #
-    DiGraph.add_node(label,
+    N.add_node(label,
                     label = label,
                     event = 'H',
                     # reconc = 1, # gibt an zu welcher Spezies es gehört
@@ -43,7 +43,7 @@ def insertHybrid(DiGraph):
                     )
     
     for parent, child in edges:
-        DiGraph.remove_edge(parent,child)
-        DiGraph.add_edge(parent,label)
-        DiGraph.add_edge(label,child)
-    return DiGraph
+        N.remove_edge(parent,child)
+        N.add_edge(parent,label)
+        N.add_edge(label,child)
+    return N
