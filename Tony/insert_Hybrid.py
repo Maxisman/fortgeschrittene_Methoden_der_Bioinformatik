@@ -1,49 +1,62 @@
 import random
 import networkx as nx
 
-def insertHybrid(N:nx.DiGraph) -> nx.DiGraph:
+def insertHybrid(N:nx.DiGraph):
     # n einfügen? um mehrere Hybridization events zuzlassen?
 
     # max label herausfinden
+    
     label = max(nx.get_node_attributes(N,"label").values())+1
 
-    # über max(dist) den Zeitbereich herausfinden
-
-    timerange = max(nx.get_node_attributes(N,"tstamp").values())
-
-    # random Zeitpunkt auswählen
-
-    time = random.uniform(0,timerange)
-
-    # edges finden, die zu dieser Zeit existiert haben.
-
-    possibleEdges = set(edge for edge in N.edges if N.nodes[edge[0]]["tstamp"] >= time and N.nodes[edge[1]]["tstamp"] <= time)
-
     # eine zufällige Edge auswählen, diese durch einen Hybrid erweitern.
-    # remove_edge(Parent,Child) 
-    # add_edges_from((Parent,Hybrid),(Hybrid,Child))
 
-    # eine zweite Edge wählen, die den Zeitpunkt enthält und nicht den gleichen Parent hat.
-    # Child2 auswählen aus allen successors der Edge0
-    # add_edge(Hybrid,Child2)
+    randomEdge = random.choice(list(N.edges))
 
-    edges = random.sample(sorted(possibleEdges),2)
+    N.remove_edge(randomEdge[0],randomEdge[1])
 
-    # Ausgangsspezies bestimmen
-    # parentspecies = [N.nodes[parent[0]]["reconc"] for parent in edges]
+    tstampHybrid = (N.nodes[randomEdge[0]]["tstamp"] + N.nodes[randomEdge[0]]["tstamp"])/2
+    distHybrid = (N.nodes[randomEdge[0]]["dist"] + N.nodes[randomEdge[0]]["dist"])/2
 
-    #
     N.add_node(label,
-                    label = label,
-                    event = 'H',
-                    # reconc = 1, # gibt an zu welcher Spezies es gehört
-                    tstamp = time,
-                    # transferred = ,
-                    dist = 0.0
-                    )
+                label = label,
+                event = 'H',
+                reconc = N.nodes[randomEdge[0]]["reconc"], # gibt an zu welcher Spezies es gehört nochmal herausfinden, was genau zeine Liste an dieser Stelle bedeutet
+                tstamp = tstampHybrid,
+                # transferred = ,
+                dist = distHybrid
+                )
     
-    for parent, child in edges:
-        N.remove_edge(parent,child)
-        N.add_edge(parent,label)
-        N.add_edge(label,child)
-    return N
+    N.add_edges_from((randomEdge[0],label),(label,randomEdge[1]))
+
+    # Zufällige Node auswählen, die Anforderungen erfüllt.
+
+    randomNode = random.choice(list(node for node in N.nodes 
+                                if N.nodes[node]["dist"]>0                                  # Node "jünger" als Hybrid ###### dist vsa. tstamp???
+                                and N.nodes[node]["reconc"] != N.nodes[label]["reconc"]     # Node andere Spezies als Hybrid
+                                and N.predecessors(node) != randomEdge[0]                   # Node hat nicht den parent als parent
+                                and N.predecessors(node) != randomEdge[1]                   # Node hat nicht das child als parent
+                                and node != randomEdge[1]))  
+    
+    if not randomNode:
+        print("es wurde keine passende Node gefunden")
+
+        
+    # Node mit Hybrid verbinden
+
+    N.add_edge(label,randomNode)
+
+    return f"Es wurde ein Hybrid zwischen node {N.nodes[randomEdge[0]]["label"]} und node {N.nodes[randomEdge[1]]["label"]} eingefügt und dieser wurde mit Node {N.nodes[randomNode[0]]["label"]} verbunden"  # Funktion gibt das Netzwerk aus, verändert aber das Netzwerk sowieso. Sollte man den ursprünglichen Baum unverändert lassen?? Dann müsste man erst eine Kopie machen
+
+def hierarchy_pos(G, root, level_gap=1.0, node_gap=1.0):
+    pos = {}
+    def _pos(node, x, y, width):
+        pos[node] = (x, y)
+        children = list(G.successors(node))
+        if children:
+            dx = width / len(children)
+            x_start = x - width/2 + dx/2
+            for child in children:
+                _pos(child, x_start, y - level_gap, dx)
+                x_start += dx
+    _pos(root, 0, 0, node_gap * len(G.nodes))
+    return pos
