@@ -1,5 +1,6 @@
 from network_editing_operations import *
 from graph_functionality import *
+from simplifying_operations import *
 import networkx as nx
 from copy import deepcopy
 
@@ -16,8 +17,9 @@ inverse_edges = ([("x", "pxy1"), ("x", "pxy2"), ("x", "pxy3"), ("y1", "pxy1"), (
 BIC_NW.add_edges_from((value, key) for (key, value) in inverse_edges)
 
 modified = deepcopy(BIC_NW)
-pull_up(modified, "y3", "pxy3", "roh")
-pull_up(modified, "x", "pxy3", "roh")
+generate_neighborhood(G)
+#pull_up(modified, "y3", "pxy3", "roh")
+#pull_up(modified, "x", "pxy3", "roh")
 
 display_multiple_trees([G, BIC_NW, modified], sigma) 
 # debug display_multiple_trees function: works not with only one graph

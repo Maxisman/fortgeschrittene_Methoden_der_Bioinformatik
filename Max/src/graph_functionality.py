@@ -1,6 +1,5 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-from copy import deepcopy
 from networkx.drawing.nx_pydot import graphviz_layout
 
 def lca(T, root, x, y):

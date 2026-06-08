@@ -1,6 +1,7 @@
 import networkx as nx
 from graph_functionality import *
 import random
+from copy import deepcopy
 
 
 def pull_up (G:nx.DiGraph, child, parent, grandparent):
@@ -17,7 +18,7 @@ def pull_up (G:nx.DiGraph, child, parent, grandparent):
 
 def pull_down (G:nx.DiGraph, child, parent, new_parent):
     """
-    pulls down node child (which is a child of parent to a node new_parent which must be a child of parent
+    pulls down node child (which is a child of parent) to a node new_parent which must be a child of parent
     """
     # if asked to pull down to a leave it pulls down to the edge instead
     if G.out_degree(new_parent) == 0:
