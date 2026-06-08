@@ -22,3 +22,4 @@ pull_up(modified, "x", "pxy3", "roh")
 display_multiple_trees([G, BIC_NW, modified], sigma) 
 # debug display_multiple_trees function: works not with only one graph
 # debug bmg function
+# van neumann entropie
