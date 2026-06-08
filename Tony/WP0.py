@@ -12,9 +12,11 @@ for path in (nx.all_simple_paths(G, source="A", target="D")):
     print(f"Path from A to D: {path}")
 print(nx.is_connected(G))
 subG = G.subgraph(["A","B","D","E"])
+print("es gibt folgenden cycle:", nx.cycle_basis(G))
 print("Subgraph edges:", sorted(subG.edges()))
 
-#nx.draw(G, with_labels=True)
+pos = nx.circular_layout(G)
+nx.draw(G, pos, with_labels=True)
 #plt.show()
 
 
@@ -74,8 +76,6 @@ nodeColorList = [nodes[v] for v in G3.nodes()]
 nx.draw(G3,with_labels=True,node_color=nodeColorList)
 plt.show()
 
-#### was genau macht node_color=nodeColorList????????????
-
 # %% 0.4
 
 ###### Aufgabe "write out the ancestor order" nicht ganz verstanden...
@@ -97,6 +97,7 @@ G4.add_edges_from([('p','u'),('p','v'),
 def lca(T, root, x, y):
     path_x = nx.shortest_path(T, root, x)
     path_y = nx.shortest_path(T, root, y)
+    print(path_x)
     for v in range(len(path_x)):
         if path_x[v] != path_y[v]:
             print(f"the lca of {x} and {y} is {path_x[v-1]}")
@@ -270,7 +271,7 @@ BMG1 = compute_bmg(T)
 
 
 nodeColorList = [nodes[v] for v in BMG1.nodes()]
-nx.draw(BMG1,with_labels=True,node_color=nodeColorList)
+nx.draw(BMG1,    with_labels=True,node_color=nodeColorList)
 # plt.show()
 
 
