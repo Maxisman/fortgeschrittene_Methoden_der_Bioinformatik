@@ -17,11 +17,11 @@ inverse_edges = ([("x", "pxy1"), ("x", "pxy2"), ("x", "pxy3"), ("y1", "pxy1"), (
 BIC_NW.add_edges_from((value, key) for (key, value) in inverse_edges)
 
 modified = deepcopy(BIC_NW)
-generate_neighborhood(G)
+neighborhood = generate_neighborhood(G)
 #pull_up(modified, "y3", "pxy3", "roh")
 #pull_up(modified, "x", "pxy3", "roh")
 
-display_multiple_trees([G, BIC_NW, modified], sigma) 
+display_multiple_trees([G] + neighborhood, sigma) 
 # debug display_multiple_trees function: works not with only one graph
 # debug bmg function
 # van neumann entropie

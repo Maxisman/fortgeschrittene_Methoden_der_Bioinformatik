@@ -94,7 +94,7 @@ def graphs_equal (G1:nx.DiGraph, G2: nx.DiGraph):
     return True
 
 def display_multiple_trees(graphs: list, sigma):
-    fig, axes = plt.subplots(2, len(graphs), figsize=(4 * len(graphs), 10))
+    fig, axes = plt.subplots(2, len(graphs), figsize=(2 * len(graphs), 10))
     for i, G in enumerate(graphs):
         pos = graphviz_layout(G, prog="dot")
         nx.draw(G, pos, ax=axes[0,i], with_labels=True)

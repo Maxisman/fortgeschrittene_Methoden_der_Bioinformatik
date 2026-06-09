@@ -1,7 +1,6 @@
 import networkx as nx
 from graph_functionality import *
 import random
-from copy import deepcopy
 
 
 def pull_up (G:nx.DiGraph, child, parent, grandparent):
