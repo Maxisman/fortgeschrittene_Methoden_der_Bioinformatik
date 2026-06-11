@@ -19,7 +19,8 @@ def lca_tree(T, root, x, y):
         else:
             return last
 
-def compute_tree_bmg(T, root, sigma):
+def compute_tree_bmg(T, sigma): #TODO change back
+    root = "roh"
     """
     DO NOT USE computes bmg of a tree
 
@@ -104,6 +105,6 @@ def display_multiple_trees(graphs: list, sigma):
     for i, G in enumerate(graphs):
         pos = graphviz_layout(G, prog="dot")
         nx.draw(G, pos, ax=axes[0,i], with_labels=True)
-        bmg = compute_tree_bmg(G, "roh", sigma) #TODO: remove magic value "roh"
+        bmg = compute_tree_bmg(G, sigma)
         nx.draw(bmg, nx.circular_layout(bmg), ax=axes[1,i], with_labels=True)
     plt.show()
