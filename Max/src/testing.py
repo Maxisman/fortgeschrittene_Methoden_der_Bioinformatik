@@ -70,10 +70,7 @@ for G in neighborhood:
 remove_equal_graphs(neighborhood)
 
 neighborhood = beam_search_step([G], sigma, compute_tree_bmg, step_size= 2) # this has failed for step_size=3 but I believe this is due to an error in my graph_functionality/lca function which will be dropped anyway so I didnt fix it
-
-#display_multiple_trees(neighborhood, sigma)
-
-
 display_multiple_trees([G] + neighborhood, sigma)
+
 # debug display_multiple_trees function: works not with only one graph
 # van neumann entropie

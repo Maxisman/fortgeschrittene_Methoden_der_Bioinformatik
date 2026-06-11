@@ -52,6 +52,26 @@ def pull_down (G:nx.DiGraph, child, parent, new_parent):
 
     return G
 
+def create_new_node_name(child, node_target):
+    """
+        Creates a new name for a parent of child and node_target. The name is parent_ followed by all leaves in lexicographical order seperated by underscore _
+    """
+    PARENT_IDENTIFIER = "p"
+
+    child = str(child).split("_")
+    if child[0] == PARENT_IDENTIFIER:
+        child = child[1:]
+    node_target = str(node_target).split("_")
+    if node_target[0] == PARENT_IDENTIFIER:
+        node_target = node_target[1:]
+    leaves = child + node_target
+
+    leaves.sort()
+
+    new_node_name = PARENT_IDENTIFIER + "_" + "_".join(leaves)
+
+    return new_node_name
+
 def pull_down_edge(G:nx.DiGraph, child, node_origin, node_target):
     """
     pulls down node child (which is a child of node_origin) onto the edge node_origin -> node_target
@@ -59,11 +79,7 @@ def pull_down_edge(G:nx.DiGraph, child, node_origin, node_target):
     if not (child in list(G.successors(node_origin)) and node_target in list(G.successors(node_origin))):
         raise ValueError("Child not a child of node_origin or node_target not a child of node_origin")
     
-    # lexicographical ordering so that more trees are the same and fewer trees need to be processed
-    if str(child) < str(node_target):
-        new_node_name = "p_" + str(child) + "_" + str(node_target)
-    else:
-        new_node_name = "p_" + str(node_target) + "_" + str(child)
+    new_node_name = create_new_node_name(child, node_target)
 
     G.add_node(new_node_name)
     G.remove_edge(node_origin, child)
