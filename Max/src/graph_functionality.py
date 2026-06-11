@@ -2,7 +2,10 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import graphviz_layout
 
-def lca(T, root, x, y):
+def lca_tree(T, root, x, y):
+    """
+    DO NOT USE computes lca of two nodes in a tree
+    """
     path_x = nx.shortest_path(T, root, x)
     path_y = nx.shortest_path(T, root, y)
 
@@ -16,8 +19,10 @@ def lca(T, root, x, y):
         else:
             return last
 
-def compute_bmg(T, root, sigma):
+def compute_tree_bmg(T, root, sigma):
     """
+    DO NOT USE computes bmg of a tree
+
     T:     a nx.DiGraph representing a rooted tree (edges parent→child)
     root:  the root vertex
     sigma: dict mapping each leaf to its color
@@ -46,7 +51,7 @@ def compute_bmg(T, root, sigma):
             
             candidate_dict = {}
             for candidate in candidates:
-                ancestor = lca(T, root, leaf, candidate)
+                ancestor = lca_tree(T, root, leaf, candidate)
                 path_length = len(nx.shortest_path(T, root, ancestor))
                 candidate_dict.update({candidate:path_length})
 
@@ -70,7 +75,9 @@ def extract_informative_triples(BMG, sigma):
                     triples.append((a,b,b_prime))
     return triples
 
-def lists_equal(l1, l2):
+def lists_equal(l1:list, l2:list):
+    l1.sort()
+    l2.sort()
     try:
         return all(x == y for x, y in zip(l1, l2, strict=True))
     except ValueError:
@@ -80,7 +87,6 @@ def graphs_equal (G1:nx.DiGraph, G2: nx.DiGraph):
     """
     checks whether nx.DiGraphs equal one another under the condition that the nodes are named equally
     """
-
     try:
         for node in G1.nodes():
             if not lists_equal(list(G1.successors(node)), list(G2.successors(node))):
@@ -98,6 +104,6 @@ def display_multiple_trees(graphs: list, sigma):
     for i, G in enumerate(graphs):
         pos = graphviz_layout(G, prog="dot")
         nx.draw(G, pos, ax=axes[0,i], with_labels=True)
-        bmg = compute_bmg(G, "roh", sigma) #TODO: remove magic value "roh"
+        bmg = compute_tree_bmg(G, "roh", sigma) #TODO: remove magic value "roh"
         nx.draw(bmg, nx.circular_layout(bmg), ax=axes[1,i], with_labels=True)
     plt.show()

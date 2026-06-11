@@ -1,14 +1,33 @@
 from network_editing_operations import *
+from graph_functionality import graphs_equal
 import networkx as nx
 from copy import deepcopy
 import itertools
 
-def generate_neighborhood(G: nx.DiGraph):
+"""
+    This script provides methods to simplify a graph network
+"""
+
+def generate_editing_neighborhood(G: nx.DiGraph):
+    """ Generates neighborhood of graphs that can be achieved by one graph edit operation. In each tree redundant and non-informative nodes will be removed.
+
+    Parameters
+    ----------
+    G: nx.Digraph
+        Graph that should be edited
+
+    Returns
+    -------
+    neighborhood: list(nx.DiGraph)
+        list of graphs that can be reached from G in one edit operation
+    """
+
     # by default remove redundant vertices beforehand (might be changed later)
+    remove_non_informative_nodes(G)
     remove_redundant_vertices(G)
     neighborhood = []
 
-    # pull ov moves
+    # pull up moves
     pull_up_candidates = []
     for grandparent in G.nodes:
         parents = G.successors(grandparent)
@@ -35,4 +54,23 @@ def generate_neighborhood(G: nx.DiGraph):
 
     return neighborhood
 
-# remove unneccessary nodes a -> unneccessary -> b
+def remove_equal_graphs(neighborhood: list[nx.DiGraph]):
+    """
+    Removes all duplicate graphs from a list of graphs
+
+    This limits the number of graphs that need to be examined and facilitates beam search
+    """
+    removal = []
+    for G in neighborhood:
+        if G in removal:
+            continue
+        for H in neighborhood:
+            if H == G:
+                continue
+            if graphs_equal(G, H):
+                removal.append(H)
+    
+    for G in removal:
+        neighborhood.remove(G)
+
+    return neighborhood
