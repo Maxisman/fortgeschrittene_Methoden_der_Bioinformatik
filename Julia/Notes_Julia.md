@@ -104,3 +104,12 @@ A partial order is
 Figure from [Geiß et al 2019](https://link.springer.com/article/10.1007/s00285-019-01332-9#Fig1)
 ![[Pasted image 20260526111110.png]]
 An evolutionary scenario (left) consists of a gene tree whose inner vertices are marked by the event type ( for speciations, for gene duplications, and for gene loss) together with its embedding into a species tree (drawn as tube-like outline). All events are placed on a time axis. The middle panel shows the observable part of the gene tree ; it is obtained from the gene tree in the full evolutionary scenario by removing all leaves marked as loss events and suppression of all resulting degree two vertices. The r.h.s. panel shows the colored best match graph that is explained by . Directed arcs indicate the best match relation . Bi-directional best matches ( and ) are drawn as solid lines without arrow heads instead of pairs of arrows. Dotted circles collect sets of leaves that have the same in- and out-neighborhood. The corresponding arcs are shown only once.
+
+
+# Function compute_bmg
+Seems to be facing some weird difficulties with the color scheme of Asymetree:
+![[Pasted image 20260615214625.png]]
+For example, node 45 is a best match of node 42, although both have the same color, while 43 is no best match of 42. Need to fix code to run with Asymetree color scheme...
+Seems that I've mostly fixed it, except that here for whatever reason:
+![[Pasted image 20260615215628.png]]
+40 did not pair with 39 as a best match. However, all other best matches are correct.
