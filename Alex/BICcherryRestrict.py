@@ -3,7 +3,7 @@ from collections import Counter
 import random
 rng = random.Random(42)
 
-def BICcherry(G: nx.DiGraph) -> nx.DiGraph:
+def BICcherryRestrict(G: nx.DiGraph) -> nx.DiGraph:
     # ASSERTIONS
     ## assert colored digraph
     assert isinstance(G, nx.DiGraph)
@@ -55,14 +55,14 @@ def BICcherry(G: nx.DiGraph) -> nx.DiGraph:
     for pair, p_name in p_nodes.items():
         x,y = sorted(pair)
         if not G.has_edge(x,y):
-            y_prime = rng.choice([v for v in G.nodes() if v != y and colors[v]==colors[y]])
+            y_prime = rng.choice([v for v in G.successors(x) if colors[v]==colors[y]])
             ## insert q_xy' below p_xy
             q_name = f"q_{x}_{y}_{y_prime}"
             N.add_edge(p_name,q_name)
             N.add_edge(q_name, x)
             N.add_edge(q_name, y_prime)
         if not G.has_edge(y,x):
-            x_prime = rng.choice([v for v in G.nodes() if v != x and colors[v]==colors[x]])
+            x_prime = rng.choice([v for v in G.successors(y) if colors[v]==colors[x]])
             ## insert q_yx'' below p_xy
             q_name = f"q_{y}_{x}_{x_prime}"
             N.add_edge(p_name, q_name)
@@ -71,5 +71,4 @@ def BICcherry(G: nx.DiGraph) -> nx.DiGraph:
 
     # return network
     return N
-
 
