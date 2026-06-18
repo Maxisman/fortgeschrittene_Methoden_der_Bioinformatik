@@ -31,7 +31,7 @@ def insertHybrid(N:nx.DiGraph):
     # Zufällige Node auswählen, die Anforderungen erfüllt.
 
     randomNode = random.choice(list(node for node in N.nodes 
-                                if N.nodes[node]["dist"]>0                                  # Node "jünger" als Hybrid ###### dist vsa. tstamp???
+                                if N.nodes[node]["dist"] > N.nodes[label]["dist"]           # Node "jünger" als Hybrid ###### dist vsa. tstamp???
                                 and N.nodes[node]["reconc"] != N.nodes[label]["reconc"]     # Node andere Spezies als Hybrid
                                 and N.predecessors(node) != randomEdge[0]                   # Node hat nicht den parent als parent
                                 and N.predecessors(node) != randomEdge[1]                   # Node hat nicht das child als parent ###### scheint noch nicht zu funktionieren
