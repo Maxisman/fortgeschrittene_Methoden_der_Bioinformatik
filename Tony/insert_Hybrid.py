@@ -35,7 +35,8 @@ def insertHybrid(N:nx.DiGraph):
                                 and N.nodes[node]["reconc"] != N.nodes[label]["reconc"]     # Node andere Spezies als Hybrid
                                 and N.predecessors(node) != randomEdge[0]                   # Node hat nicht den parent als parent
                                 and N.predecessors(node) != randomEdge[1]                   # Node hat nicht das child als parent ###### scheint noch nicht zu funktionieren
-                                and node != randomEdge[1]))  
+                                and node != randomEdge[1]
+                                and node != label))  
     
     if not randomNode:
         print("es wurde keine passende Node gefunden")
