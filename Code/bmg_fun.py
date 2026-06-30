@@ -10,7 +10,7 @@ def compute_bmg(T, sigma):
     """
 
     # Normalize sigma values to be hashable (convert arrays to tuples)
-    sigma = {k: mcolors.to_hex(v) if not isinstance(v, str) else v
+    sigma = {k: str(v)
              for k, v in sigma.items()}
 
     leaves = list(sigma.keys())

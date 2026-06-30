@@ -37,11 +37,12 @@ fig, axes = plt.subplots(2, 1, figsize=(4, 10))
 pos = graphviz_layout(G, prog="dot")
 nx.draw(G, pos, nodelist=list(G.nodes) - gene_colors.keys(), ax=axes[0])
 for color, node_list in color_to_keys.items():
-    nx.draw(G, pos, nodelist=node_list, node_color = color, ax=axes[0], with_labels=True)
+    nx.draw(G, pos, nodelist=node_list, node_color=[color] * len(node_list), ax=axes[0], with_labels=True)
+# hint: node_color=[color] * len(node_list) is important to visualize the colors properly
 
 for color, node_list in color_to_keys.items():
-    nx.draw(BMG, nx.circular_layout(BMG), nodelist=node_list, node_color = color, ax=axes[1], with_labels=True)
-#nx.draw(BMG, nx.circular_layout(BMG), ax=axes[1], with_labels=True)
+    nx.draw(BMG, nx.circular_layout(BMG), nodelist=node_list, node_color=[color] * len(node_list), ax=axes[1], with_labels=True)
+
 plt.show()
 
 # visualize networkx graph and edges from three randomly selected nodes of BMG
@@ -53,7 +54,7 @@ ax_graph = fig.add_subplot(gs[0, :])  # the colon means "all columns"
 pos = graphviz_layout(G, prog="dot")
 nx.draw(G, pos, nodelist=list(G.nodes) - gene_colors.keys(), ax=ax_graph)
 for color, node_list in color_to_keys.items():
-    nx.draw(G, pos, nodelist=node_list, node_color = color, ax=ax_graph, with_labels=True)
+    nx.draw(G, pos, nodelist=node_list, node_color=[color] * len(node_list), ax=ax_graph, with_labels=True)
 
 # select three random nodes from gene_colors.keys
 for i, starting_node in enumerate(random.sample(list(gene_colors.keys()), 3)):
@@ -63,6 +64,6 @@ for i, starting_node in enumerate(random.sample(list(gene_colors.keys()), 3)):
     current_ax = fig.add_subplot(gs[1, i])
     current_ax.set_title(f"Best matches of {starting_node}")
     for color, node_list in color_to_keys.items():
-        nx.draw(BMG, nx.circular_layout(BMG), edgelist=edge_list, nodelist=node_list, node_color = color, ax=current_ax, with_labels=True)
+        nx.draw(BMG, nx.circular_layout(BMG), edgelist=edge_list, nodelist=node_list, node_color=[color] * len(node_list), ax=current_ax, with_labels=True)
 
 plt.show()
