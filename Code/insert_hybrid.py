@@ -1,90 +1,93 @@
 import random
 import networkx as nx
 
-def insertHybrid(N:nx.DiGraph):
-    # n einfügen? um mehrere Hybridization events zuzlassen?
+def insertHybrid(N:nx.DiGraph, i:int = 1):
+
+    ### Entry Assertions
+    assert isinstance(N, nx.DiGraph), "Eingabe muss ein nx.DiGraph sein!"
+    assert isinstance(i,int), "Anzahl der Hybridisierungsevents muss int ein"
+    assert N.number_of_edges() > 0, "Graph hat keine Kanten!"
 
     N_mod = N.copy()
-
-    # max label herausfinden
-
-    label = max(nx.get_node_attributes(N_mod,"label").values())+1
 
     # Es sollte erst eine Edge und eine dazu passende Node für die Hbridisierung gesucht werden
     # nur wenn eine passende Kombination gefunden wurde, sollen veränderungen am Baum gemacht werden
 
+    cached_predecessors = {}
+
     # Suche nach Edge und Node:
-    
-    foundPair = False
+    for _ in range(i):
 
-    # eine zufällige Edge auswählen
+        # max label herausfinden
+        label = max(nx.get_node_attributes(N_mod,"label").values())+1
+        foundPair = False
 
-    edgeList = list(N_mod.edges)
-    random.shuffle(edgeList)
+        # Liste mit zufälliger Reihenfolge der Edges und Nodes generieren
+        edgeList = list(N_mod.edges)
+        random.shuffle(edgeList)
 
-    nodeList = list(N_mod.nodes)
-    random.shuffle(nodeList)
+        nodeList = list(N_mod.nodes)
+        random.shuffle(nodeList)
 
-    # Vorab-Optimierung: Alle Predecessors EINMAL berechnen und speichern
-    all_predecessors = {n: list(N_mod.predecessors(n)) for n in N_mod.nodes}
+        for edge in edgeList:
+            edgeParent = edge[0]
+            edgeChild = edge[1]
 
-    for edge in edgeList:
-        edgeParent = edge[0]
-        edgeChild = edge[1]
+            tstampHybrid = (N_mod.nodes[edgeParent]["tstamp"] + N_mod.nodes[edgeChild]["tstamp"])/2
 
-        tstampHybrid = (N_mod.nodes[edgeParent]["tstamp"] + N_mod.nodes[edgeChild]["tstamp"])/2
+            for node in nodeList:
+                if node not in cached_predecessors:
+                    cached_predecessors[node] = list(N_mod.predecessors(node))
+        
+                nodeParents = cached_predecessors[node]
 
-        for node in nodeList:
-            nodeParents = all_predecessors[node]
+                if (
+                    N_mod.nodes[node]["tstamp"] < tstampHybrid                      # Node "jünger" als Hybrid ###### dist vs. tstamp???
+                    and edgeParent not in nodeParents                               # Node hat nicht den parent als parent
+                    and edgeChild not in nodeParents                                # Node hat nicht das child als parent
+                    and node != edgeChild
+                    and node != edgeParent
+                    # and N.nodes[node]["reconc"] != N.nodes[label]["reconc"]       # Node andere Spezies als Hybrid; soll das so?
+                    ):
+                    foundPair = True
+                    break
 
-            if (
-                N_mod.nodes[node]["tstamp"] < tstampHybrid                      # Node "jünger" als Hybrid ###### dist vs. tstamp???
-                and edgeParent not in nodeParents                               # Node hat nicht den parent als parent
-                and edgeChild not in nodeParents                                # Node hat nicht das child als parent
-                and node != edgeChild
-                and node != edgeParent
-                # and N.nodes[node]["reconc"] != N.nodes[label]["reconc"]       # Node andere Spezies als Hybrid; soll das so?
-                ):
-                foundPair = True
+            if foundPair:
                 break
 
-        if foundPair:
-            break
+        if not foundPair:
+            print ("No suitable Edges and Nodes found for hybridization Event")
+            return N_mod
 
-    if not foundPair:
-        print ("No suitable Edges and Nodes found for hybridization Event")
-        return N_mod
+        #### Veränderung des Netzwerks:
 
-    #### Veränderung des Netzwerks:
+        # Kante zwischen Parent und Child entfernen
+        N_mod.remove_edge(edgeParent,edgeChild)
 
-    # Kante zwischen Parent und Child entfernen
-    N_mod.remove_edge(edgeParent,edgeChild)
+        # Hybrid zwischen Parent und Child einbauen
 
-    # Hybrid zwischen Parent und Child einbauen
+        distHybrid = (N_mod.nodes[edgeParent]["dist"] + N_mod.nodes[edgeChild]["dist"])/2
 
-    distHybrid = (N_mod.nodes[edgeParent]["dist"] + N_mod.nodes[edgeChild]["dist"])/2
-
-    N_mod.add_node(label,
-                label = label,
-                event = 'H',
-                reconc = N_mod.nodes[edgeParent]["reconc"], # gibt an zu welcher Spezies es gehört nochmal herausfinden, was genau zeine Liste an dieser Stelle bedeutet
-                tstamp = tstampHybrid,
-                # transferred = ,
-                dist = distHybrid
-                )
-    
-    N_mod.add_edges_from([(edgeParent,label),(label,edgeChild)])
+        N_mod.add_node(label,
+                    label = label,
+                    event = 'H',
+                    reconc = N_mod.nodes[edgeParent]["reconc"], # gibt an zu welcher Spezies es gehört nochmal herausfinden, was genau zeine Liste an dieser Stelle bedeutet
+                    tstamp = tstampHybrid,
+                    # transferred = ,
+                    dist = distHybrid
+                    )
         
-    # Node mit Hybrid verbinden
+        N_mod.add_edges_from([(edgeParent,label),(label,edgeChild)])
+            
+        # Node mit Hybrid verbinden
 
-    N_mod.add_edge(label,node)
-
-    # Prüfen ob ein cycle eingebaut wurde
-
-    if not nx.is_directed_acyclic_graph(N_mod):
-        print("WARNUNG: Es wurde ein Zyklus generiert")
-    
-    print(f"Es wurde ein Hybrid zwischen node {N_mod.nodes[edgeParent]['label']} und node {N_mod.nodes[edgeChild]['label']} eingefügt und dieser wurde mit Node {N_mod.nodes[node]['label']} verbunden") 
-    # Funktion gibt das Netzwerk aus, verändert aber das Netzwerk sowieso. Sollte man den ursprünglichen Baum unverändert lassen?? Dann müsste man erst eine Kopie machen
+        N_mod.add_edge(label,node)
+        
+        print(f"Es wurde ein Hybrid zwischen node {N_mod.nodes[edgeParent]["label"]} und node {N_mod.nodes[edgeChild]["label"]} eingefügt und dieser wurde mit Node {N_mod.nodes[node]["label"]} verbunden") 
+        
+        ### Exit Assertions:
+        assert not N_mod.has_edge(edgeParent, edgeChild), "Alte Kante existiert noch!"
+        assert N_mod.has_edge(label, node), "Verbindung zum Hybriden fehlt!"
+        assert nx.is_directed_acyclic_graph(N_mod), "Zyklus generiert!"
 
     return N_mod
