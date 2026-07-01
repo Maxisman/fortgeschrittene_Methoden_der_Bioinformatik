@@ -74,3 +74,6 @@ display_multiple_trees([G] + neighborhood, sigma)
 
 # debug display_multiple_trees function: works not with only one graph
 # van neumann entropie
+
+#pytest: unit tests
+# stepsize erhöhen wenn in lokalem Optimum

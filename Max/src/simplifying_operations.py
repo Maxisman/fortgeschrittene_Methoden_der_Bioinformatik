@@ -135,4 +135,3 @@ def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callab
     return [G for score, G in top_graphs]
 
     #new_batch = heapq.nlargest(top_n, graphs, key= (lambda G : helper_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY)))
-
