@@ -72,9 +72,7 @@ for G in neighborhood:
 
 remove_equal_graphs(neighborhood)
 
-print("Computing neighborhood ...")
-
-neighborhood = beam_search_step([G], sigma, compute_bmg, step_size= 2) # this has failed for step_size=3 but I believe this is due to an error in my graph_functionality/lca function which will be dropped anyway so I didnt fix it
+neighborhood = beam_search_step([G], sigma, compute_bmg, step_size= 3) # this has failed for step_size=3 but I believe this is due to an error in my graph_functionality/lca function which will be dropped anyway so I didnt fix it
 print(len(neighborhood))
 display_multiple_trees([G] + neighborhood, sigma)
 
@@ -83,3 +81,5 @@ display_multiple_trees([G] + neighborhood, sigma)
 
 # pytest: unit tests
 # stepsize erhöhen wenn in lokalem Optimum
+# größere Funktion die andere benutzt
+# timestep = 3?
