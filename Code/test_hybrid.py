@@ -75,10 +75,4 @@ def test_minimal_tree_cannot_hybridize():
     # 2. Funktion aufrufen (wir fordern 1 Event)
     result_G = insertHybrid(minimal_tree, i=1)
 
-    # 3. Überprüfen, dass absolut nichts verändert wurde
-    assert result_G.number_of_nodes() == 3, "Die Anzahl der Nodes hätte sich nicht ändern dürfen!"
-    assert result_G.number_of_edges() == 2, "Die Anzahl der Kanten hätte sich nicht ändern dürfen!"
-    
-    # Sicherstellen, dass keine Hybrid-Node ('H') existiert
-    hybrid_nodes = [n for n, attr in result_G.nodes(data=True) if attr.get("event") == "H"]
-    assert len(hybrid_nodes) == 0, "Es wurde fälschlicherweise eine Hybrid-Node eingefügt!"
+    assert nx.utils.graphs_equal(result_G, minimal_tree), "Der Graph wurde fälschlicherweise modifiziert!"
