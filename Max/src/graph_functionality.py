@@ -84,7 +84,7 @@ def lists_equal(l1:list, l2:list):
     except ValueError:
         return False
 
-def graphs_equal (G1:nx.DiGraph, G2: nx.DiGraph):
+def graphs_equal (G1:nx.DiGraph, G2: nx.DiGraph): #TODO: check whether nodes and edges have same count
     """
     checks whether nx.DiGraphs equal one another under the condition that the nodes are named equally
     """

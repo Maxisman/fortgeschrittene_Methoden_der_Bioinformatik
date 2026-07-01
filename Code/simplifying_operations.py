@@ -1,5 +1,6 @@
 from network_editing_operations import *
 from graph_functionality import graphs_equal
+from bmg_fun import compute_bmg
 import networkx as nx
 from copy import deepcopy
 from _collections_abc import Callable
@@ -98,7 +99,7 @@ def helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function,
         return (tree_likeness_function(G))
 
 
-def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callable[[nx.DiGraph, dict], nx.DiGraph], top_n:int = 10, step_size:int = 3, tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness): #TODO: add Julias bmg function as default
+def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callable[[nx.DiGraph, dict], nx.DiGraph] = compute_bmg, top_n:int = 10, step_size:int = 3, tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness): #TODO: add Julias bmg function as default
     """
     Tries to make a set of networks more tree-like while conserving the network's best match graph. This is achieved by calculating the neighborhood of a graph for up to step_size steps and then taking the top n graphs according to the tree likeness.
 
@@ -124,12 +125,14 @@ def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callab
     for step in range(step_size):
         neighborhood = []
         for G in graphs:
-            neighborhood += generate_editing_neighborhood(G)
+            neighborhood = neighborhood + generate_editing_neighborhood(G)
         graphs = graphs + neighborhood
         remove_equal_graphs(graphs) #TODO: make that more efficient
+        print(f"Finished step {step + 1}/{step_size}")
 
-    scored_graphs = ((helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY), G) for G in graphs)
-    valid_graphs = ((score, G) for score, G in scored_graphs if score > NEGATIVE_INFINITY)
+
+    scored_graphs = [(helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY), G) for G in graphs]
+    valid_graphs = [(score, G) for score, G in scored_graphs if score > NEGATIVE_INFINITY]
     top_graphs = heapq.nlargest(top_n, valid_graphs, key = lambda x : x[0])
 
     return [G for score, G in top_graphs]

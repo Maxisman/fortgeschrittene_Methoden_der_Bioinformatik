@@ -1,6 +1,7 @@
 from network_editing_operations import *
 from graph_functionality import *
 from simplifying_operations import *
+from bmg_fun import compute_bmg
 import networkx as nx
 from copy import deepcopy
 
@@ -64,16 +65,21 @@ neighborhood = generate_editing_neighborhood(G)
 #pull_up(modified, "y3", "pxy3", "roh")
 #pull_up(modified, "x", "pxy3", "roh")
 
+#display_multiple_trees(neighborhood, sigma)
+
 for G in neighborhood:
     remove_non_informative_nodes(G)
 
 remove_equal_graphs(neighborhood)
 
-neighborhood = beam_search_step([G], sigma, compute_tree_bmg, step_size= 2) # this has failed for step_size=3 but I believe this is due to an error in my graph_functionality/lca function which will be dropped anyway so I didnt fix it
+print("Computing neighborhood ...")
+
+neighborhood = beam_search_step([G], sigma, compute_bmg, step_size= 2) # this has failed for step_size=3 but I believe this is due to an error in my graph_functionality/lca function which will be dropped anyway so I didnt fix it
+print(len(neighborhood))
 display_multiple_trees([G] + neighborhood, sigma)
 
 # debug display_multiple_trees function: works not with only one graph
 # van neumann entropie
 
-#pytest: unit tests
+# pytest: unit tests
 # stepsize erhöhen wenn in lokalem Optimum

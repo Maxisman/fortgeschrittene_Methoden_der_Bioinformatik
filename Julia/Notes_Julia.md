@@ -113,3 +113,12 @@ For example, node 45 is a best match of node 42, although both have the same col
 Seems that I've mostly fixed it, except that here for whatever reason:
 ![[Pasted image 20260615215628.png]]
 40 did not pair with 39 as a best match. However, all other best matches are correct.
+
+There seems to be a greater issue with the BMG function:
+![[Pasted image 20260629141743.png]]
+15 should only have 32 and 33 as purple and yellow best-matches, but has other nodes of that color as well. And 29 (in the middle) points to its own color...
+
+Solved the problem!!!
+The issue was how colors were represented using matplotlib (the colors in the graphs were just printed wrongly).
+It's important to use this when printing the graphs: `node_color=[color] * len(node_list)`
+![[BMG_finalized.png]]
