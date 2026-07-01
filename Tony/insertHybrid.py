@@ -1,5 +1,6 @@
 import random
 import networkx as nx
+import matplotlib.cm as cm
 
 def insertHybrid(N:nx.DiGraph, i:int = 1):
 
@@ -91,3 +92,60 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
         assert nx.is_directed_acyclic_graph(N_mod), "Zyklus generiert!"
 
     return N_mod
+
+
+def convert_to_nx(T) -> nx.DiGraph:
+    """
+    Converts an Asymmetree Tree into a NetworkX DiGraph.
+    Instead of using the node ids (as the corresponding function does in the asymmetree package)
+    it stores the node labels as the node names in the NetworkX DiGraph.
+    """
+    graph = nx.DiGraph()
+
+    # not sure what this does in the original code, commenting it out for now
+    #if not self.root:
+    #    return graph, None
+
+    for v in T.preorder():
+        graph.add_node(v.label)
+        for key, value in v.attributes():
+            graph.nodes[v.label][key] = value
+
+    for u, v, sibling_nr in T.edges_sibling_order():
+        if u is v:
+            raise RuntimeError(f"loop at {u} and {v}")
+        graph.add_edge(u.label, v.label)
+        graph.nodes[v.label]["sibling_nr"] = sibling_nr
+
+    return graph
+
+
+
+def color_leaves(N):
+    # Alle Blätter identifizieren
+    leaves = [node for node in N.nodes() if N.out_degree(node) == 0]
+
+    # Einzigartige Spezies der Blätter sammeln und ihnen Farben zuweisen
+    # Wir nutzen ein Set, um Duplikate zu vermeiden
+    unique_species = list(set(N.nodes[node]["reconc"] for node in leaves))
+
+    # Farbpalette generieren (z. B. 'Set1', 'tab10' oder 'viridis')
+    cmap = cm.get_cmap("Set1", len(unique_species))
+    species_to_color = {
+        spec: cmap(i) for i, spec in enumerate(unique_species)
+    }
+
+    # 4. Farbliste für ALLE Knoten im Graphen erstellen
+    node_colors = []
+    default_color = (
+        "#A0CBE2"  # Eine neutrale Farbe (z.B. Hellblau) für innere Knoten
+    )
+
+    for node in N.nodes():
+        if node in leaves:
+            species = N.nodes[node]["reconc"]
+            node_colors.append(species_to_color[species])
+        else:
+            node_colors.append(default_color)
+
+    return node_colors 
