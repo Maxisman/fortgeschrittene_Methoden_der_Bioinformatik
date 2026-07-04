@@ -91,3 +91,94 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
         assert nx.is_directed_acyclic_graph(N_mod), "Zyklus generiert!"
 
     return N_mod
+
+def color_leaves(N):
+    # Alle Blätter identifizieren
+    leaves = [node for node in N.nodes() if N.out_degree(node) == 0]
+
+    # Einzigartige Spezies der Blätter sammeln und ihnen Farben zuweisen
+    # Wir nutzen ein Set, um Duplikate zu vermeiden
+    unique_species = list(set(N.nodes[node]["reconc"] for node in leaves))
+
+    # Farbpalette generieren (z. B. 'Set1', 'tab10' oder 'viridis')
+    cmap = cm.get_cmap("Set1", len(unique_species))
+    species_to_color = {
+        spec: cmap(i) for i, spec in enumerate(unique_species)
+    }
+
+    # 4. Farbliste für ALLE Knoten im Graphen erstellen
+    node_colors = []
+    default_color = (
+        "#A0CBE2"  # Eine neutrale Farbe (z.B. Hellblau) für innere Knoten
+    )
+
+    for node in N.nodes():
+        if node in leaves:
+            species = N.nodes[node]["reconc"]
+            node_colors.append(species_to_color[species])
+        else:
+            node_colors.append(default_color)
+
+    return node_colors 
+
+def calculate_time_tree_layout(G: nx.DiGraph):
+    """Berechnet ein perfektes Time-Tree-Layout.
+
+    Die Y-Achse spiegelt exakt den tstamp wider.
+    Die X-Achse ordnet Blätter kollisionsfrei nebeneinander an.
+    """
+    pos = {}
+
+    # 1. Finde die Root des Baums (Node ohne Parents)
+    roots = [n for n in G.nodes if G.in_degree(n) == 0]
+    if not roots:
+        # Falls es ein Netzwerk ist und keine klare Root existiert,
+        # nehmen wir die Node mit dem höchsten Timestamp als Startpunkt
+        root = max(G.nodes, key=lambda n: G.nodes[n].get("tstamp", 0))
+    else:
+        root = roots[0]
+
+    # 2. Finde alle Blätter (Leaves) im Graphen
+    # Bei Netzwerken: Nodes ohne ausgehende Kanten
+    leaves = [n for n in G.nodes if G.out_degree(n) == 0]
+
+    # Trick: Wir sortieren die Blätter basierend auf einer Tiefensuche (DFS) von der Root aus.
+    # Das sorgt dafür, dass geschwisterliche Blätter auf der X-Achse auch nebeneinander landen!
+    dfs_order = list(nx.dfs_preorder_nodes(G, source=root))
+    ordered_leaves = [n for n in dfs_order if n in leaves]
+
+    # 3. Weise den Blättern gleichmäßige X-Koordinaten zu (z.B. von 0 bis len(leaves)-1)
+    for index, leaf in enumerate(ordered_leaves):
+        pos[leaf] = (float(index), float(G.nodes[leaf].get("tstamp", 0.0)))
+
+    # 4. Berechne die X-Koordinaten für alle inneren Knoten von unten nach oben
+    # Wir wiederholen das, bis alle Knoten eine Position haben (wichtig für komplexe Netzwerke)
+    remaining_nodes = set(G.nodes) - set(ordered_leaves)
+
+    while remaining_nodes:
+        nodes_to_remove = set()
+        for node in remaining_nodes:
+            children = list(G.successors(node))
+
+            # Ein innerer Knoten kann seine X-Position bestimmen, sobald alle seine Kinder eine Position haben
+            if children and all(child in pos for child in children):
+                # Die X-Position ist das exakte Mittelmaß der X-Positionen aller Kinder
+                avg_x = sum(pos[child][0] for child in children) / len(children)
+                y = float(G.nodes[node].get("tstamp", 0.0))
+
+                pos[node] = (avg_x, y)
+                nodes_to_remove.add(node)
+
+        # Falls in einem Durchlauf nichts gelöst wurde (z.B. wegen verbleibender Loops in komplexen Netzwerken),
+        # brechen wir ab und weisen den Resten Standardwerte zu, um Endlosschleifen zu verhindern.
+        if not nodes_to_remove:
+            for node in remaining_nodes:
+                pos[node] = (
+                    random.uniform(0, len(leaves)),
+                    float(G.nodes[node].get("tstamp", 0.0)),
+                )
+            break
+
+        remaining_nodes -= nodes_to_remove
+
+    return pos
