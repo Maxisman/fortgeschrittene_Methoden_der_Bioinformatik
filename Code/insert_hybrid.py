@@ -1,5 +1,6 @@
 import random
 import networkx as nx
+import matplotlib.cm as cm
 
 def insertHybrid(N:nx.DiGraph, i:int = 1):
 
