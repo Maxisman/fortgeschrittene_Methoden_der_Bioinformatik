@@ -19,7 +19,10 @@ def compute_bmg(T, sigma):
 
     # first, add all leaves to the BMG
     for node, color in sigma.items():
-        BMG.add_node(node, color=color)
+        # BMG.add_node(node, color=color)   # Alte Erstellung der Nodes
+
+        # Änderung von Tony, um die Graphen vergleichbar zu machen:
+        BMG.add_node(node, reconc = T.nodes[node]["reconc"], label = node) 
 
     # second, add edges to nodes for best matches
     # loop through all leaves
