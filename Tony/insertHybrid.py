@@ -1,6 +1,7 @@
 import random
 import networkx as nx
 import matplotlib.cm as cm
+import itertools
 
 def insertHybrid(N:nx.DiGraph, i:int = 1):
 
@@ -318,3 +319,80 @@ def bmg(G: nx.DiGraph, mode = "weak"):
                     if isBestMatch:
                         BMG.add_edge(x,y)
     return BMG
+
+def biccherry(G: nx.DiGraph):
+    BCN = nx.DiGraph()
+    BCN.add_node("rho")
+
+
+    for leaf in G.nodes():
+        BCN.add_node(leaf, reconc = G.nodes[leaf]["reconc"], label = leaf)
+
+    if len(G.nodes())==2:
+        for leaf in G.nodes():
+            BCN.add_edge("rho",leaf)
+        return BCN
+
+    cherryParents = {}
+    
+    for x,y in itertools.combinations(G.nodes(),2):
+        if G.nodes[x]["reconc"] != G.nodes[y]["reconc"]:
+            p_name = f"p_{x}_{y}"
+            BCN.add_edge("rho",p_name)
+            BCN.add_edge(p_name, x)
+            BCN.add_edge(p_name, y)
+            cherryParents[(x,y)] = p_name
+
+
+    for (x,y), p_name in cherryParents.items(): 
+        if not G.has_edge(x,y):
+            # Kandidatrn wählen nach folgender Priorisierung:
+            # 1. Best Match von x
+            # 2. x ist Best Match von y
+            # 3. random
+            candidates = [z for z in G.successors(x) if G.nodes[z]["reconc"] == G.nodes[y]["reconc"]]
+
+            if not candidates:
+                candidates = [z for z in G.predecessors(x) if G.nodes[z]["reconc"] == G.nodes[y]["reconc"] and z != y]
+
+            if not candidates:
+                candidates = [z for z in G.nodes() if G.nodes[z]["reconc"] == G.nodes[y]["reconc"] and z != y]
+
+            if not candidates:
+                print("Warnung,", x, "und", y, "sind keine Best-Matches, es wurde allerdings kein anderer Best-Match-Kandidat für", x, "gefunden")
+                continue
+
+            if candidates:
+                z = random.choice(candidates)
+                q_name = f"q_{x}_{z}"
+                BCN.add_edge(p_name,q_name)
+                BCN.add_edge(q_name, x)
+                BCN.add_edge(q_name, z)
+
+            if BCN.has_edge(p_name, x):
+                BCN.remove_edge(p_name,x)
+
+        if not G.has_edge(y,x):
+            candidates = [z for z in G.successors(y) if G.nodes[z]["reconc"] == G.nodes[x]["reconc"]]
+
+            if not candidates:
+                candidates = [z for z in G.predecessors(y) if G.nodes[z]["reconc"] == G.nodes[x]["reconc"] and z != x]
+
+            if not candidates:
+                candidates = [z for z in G.nodes() if G.nodes[z]["reconc"] == G.nodes[x]["reconc"] and z != x]
+
+            if not candidates:
+                print("Warnung,", y, "und", x, "sind keine Best-Matches, es wurde allerdings kein anderer Best-Match-Kandidat für", y, "gefunden")
+                continue
+
+            if candidates:
+                z = random.choice(candidates)
+                q_name = f"q_{y}_{z}"
+                BCN.add_edge(p_name,q_name)
+                BCN.add_edge(q_name, y)
+                BCN.add_edge(q_name, z)
+
+            if BCN.has_edge(p_name, y):
+                BCN.remove_edge(p_name,y)
+                
+    return BCN
