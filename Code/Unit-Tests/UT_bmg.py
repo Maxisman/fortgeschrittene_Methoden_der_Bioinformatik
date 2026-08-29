@@ -17,8 +17,8 @@ def medium_three_color_tree():
 @pytest.fixture
 def medium_three_color_tree_expected_bmg():
     G = nx.DiGraph()
-    G.add_nodes_from([("a1", {"color": "red", 'label': 'a1'}), ("b1", {"color": "blue", 'label': 'b1'}), ("c1", {"color": "green", 'label': 'c1'}),
-                      ("b2", {"color": "blue", 'label': 'b2'}), ("c2", {"color": "green", 'label': 'c2'})])
+    G.add_nodes_from([("a1", {"color": "red"}), ("b1", {"color": "blue"}), ("c1", {"color": "green"}),
+                      ("b2", {"color": "blue"}), ("c2", {"color": "green"})])
     G.add_edges_from([("a1", "c1"), ("c1", "a1"), ("b1", "a1"), ("a1", "b1"), ("c2", "a1"), ("b2", "a1"), ("b1", "c1"), ("c1", "b1"),
                       ("b2", "c2"), ("c2", "b2")])
     return G
@@ -52,7 +52,7 @@ class TestBMGKnownExamples:
         T.add_edges_from([("p", "x"), ("p", "y")])
         # create corresponding bmg
         G = nx.DiGraph()
-        G.add_nodes_from([("x", {"color": "red", 'label': 'x'}), ("y", {"color": "blue", 'label': 'y'})])
+        G.add_nodes_from([("x", {"color": "red"}), ("y", {"color": "blue"})])
         G.add_edges_from([("x", "y"), ("y", "x")])
         # get result from bmg function
         result = bmg(T, mode="strong")
@@ -65,7 +65,7 @@ class TestBMGKnownExamples:
         T.add_edges_from([("p", "u"), ("p", "z"), ("u", "x"), ("u", "y")])
         # create corresponding bmg
         G = nx.DiGraph()
-        G.add_nodes_from([("x", {"color": "red", 'label': 'x'}), ("y", {"color": "blue", 'label': 'y'}), ("z", {"color": "green", 'label': 'z'})])
+        G.add_nodes_from([("x", {"color": "red"}), ("y", {"color": "blue"}), ("z", {"color": "green"})])
         G.add_edges_from([("x", "y"), ("y", "x"), ("x", "z"), ("y", "z"), ("z", "y"), ("z", "x")])
         # get result from bmg function
         result = bmg(T, mode="strong")
@@ -97,7 +97,7 @@ class TestBMGKnownExamples:
     def test_bic_cherry_strong(self, bic_cherry_nw):
         result = bmg(bic_cherry_nw, mode="strong")
         G = nx.DiGraph()
-        G.add_nodes_from([("y", {"color": "red", 'label': 'y'}), ("x", {"color": "blue", 'label': 'x'}), ("z", {"color": "red", 'label': 'z'})])
+        G.add_nodes_from([("y", {"color": "red"}), ("x", {"color": "blue"}), ("z", {"color": "red"})])
         G.add_edges_from([("y", "x"), ("z", "x")])
         #print(result.edges(data=True))
         #print(G.edges(data=True))
@@ -106,7 +106,7 @@ class TestBMGKnownExamples:
     def test_bic_cherry_weak(self, bic_cherry_nw):
         result = bmg(bic_cherry_nw, mode="weak")
         G = nx.DiGraph()
-        G.add_nodes_from([("y", {"color": "red", 'label': 'y'}), ("x", {"color": "blue", 'label': 'x'}), ("z", {"color": "red", 'label': 'z'})])
+        G.add_nodes_from([("y", {"color": "red"}), ("x", {"color": "blue"}), ("z", {"color": "red"})])
         G.add_edges_from([("y", "x"), ("z", "x"), ("x", "y"), ("x", "z")])
         #print(result.edges(data=True))
         #print(G.edges(data=True))
@@ -117,8 +117,8 @@ class TestBMGKnownExamples:
     def test_medium_nw_strong(self, medium_two_color_nw):
         result = bmg(medium_two_color_nw, mode="strong")
         G = nx.DiGraph()
-        G.add_nodes_from([("y", {"color": "red", 'label': 'y'}), ("y1", {"color":'red', 'label': 'y1'}),
-                          ("y2", {"color":'red', 'label': 'y2'}), ("x", {"color":'green', 'label': 'x'})])
+        G.add_nodes_from([("y", {"color": "red"}), ("y1", {"color":'red'}),
+                          ("y2", {"color":'red'}), ("x", {"color":'green'})])
         G.add_edges_from([("y", "x"), ("y1", "x"), ("y2", "x")])
         # print(result.edges(data=True))
         # print(G.edges(data=True))
@@ -127,8 +127,8 @@ class TestBMGKnownExamples:
     def test_medium_nw_weak(self, medium_two_color_nw):
         result = bmg(medium_two_color_nw, mode="weak")
         G = nx.DiGraph()
-        G.add_nodes_from([("y", {"color": "red", 'label': 'y'}), ("y1", {"color": 'red', 'label': 'y1'}),
-                          ("y2", {"color": 'red', 'label': 'y2'}), ("x", {"color": 'green', 'label': 'x'})])
+        G.add_nodes_from([("y", {"color": "red"}), ("y1", {"color": 'red'}),
+                          ("y2", {"color": 'red'}), ("x", {"color": 'green'})])
         G.add_edges_from([("y", "x"), ("y1", "x"), ("y2", "x"), ("x", "y"), ("x", "y2")])
         # print(result.edges(data=True))
         # print(G.edges(data=True))
