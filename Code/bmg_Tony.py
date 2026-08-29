@@ -1,6 +1,8 @@
 import networkx as nx
 
-def bmg(G: nx.DiGraph, mode = "weak"):
+def bmg(G: nx.DiGraph, mode = "weak") -> nx.DiGraph:
+    if mode not in ("weak", "strong"):
+        raise ValueError(f"mode must be 'weak' or 'strong', got {mode!r}")
 
     BMG = nx.DiGraph()
 

@@ -1,11 +1,12 @@
 import pytest
 import networkx as nx
 from bmg_Tony import bmg
+import bmg_fun
+import asymmetree.treeevolve as te
 
 # medium tree with three colors that can be shared across functions
 @pytest.fixture
 def medium_three_color_tree():
-    """Hand-built tree: ((a,b),c) with sigma = {a:1, b:1, c:2}."""
     T = nx.DiGraph()
     T.add_nodes_from([("a1", {"reconc": "red"}), ("b1", {"reconc": "blue"}), ("c1", {"reconc": "green"}),
                       ("b2", {"reconc": "blue"}), ("c2", {"reconc": "green"})])
@@ -15,7 +16,6 @@ def medium_three_color_tree():
 # BMG of medium tree with three colors that can be shared across functions
 @pytest.fixture
 def medium_three_color_tree_expected_bmg():
-    """Expected best-match graph for small_two_color_tree."""
     G = nx.DiGraph()
     G.add_nodes_from([("a1", {"reconc": "red", 'label': 'a1'}), ("b1", {"reconc": "blue", 'label': 'b1'}), ("c1", {"reconc": "green", 'label': 'c1'}),
                       ("b2", {"reconc": "blue", 'label': 'b2'}), ("c2", {"reconc": "green", 'label': 'c2'})])
@@ -23,15 +23,24 @@ def medium_three_color_tree_expected_bmg():
                       ("b2", "c2"), ("c2", "b2")])
     return G
 
-# BIC cherry network with two colors that can be shared across functions
+# BIC cherry network with two colors that can be shared across functions, BMG of this nw differs between weak and strong
 @pytest.fixture
 def bic_cherry_nw(): # example from bmg_in_networks paper
-    """Hand-built tree: ((a,b),c) with sigma = {a:1, b:1, c:2}."""
     bic_cherry = nx.DiGraph()
     bic_cherry.add_nodes_from([("y", {"reconc": "red"}), ("x", {"reconc": "blue"}), ("z", {"reconc": "red"})])
     bic_cherry.add_edges_from([("p", "Pxy"), ("Pxy", "y"), ("Pxy", "x"), ("Pxy", "Qxz"), ("Qxz", "x"), ("Qxz", "z"),
                                ("p", "Pxz"), ("Pxz", "z"), ("Pxz", "x"), ("Pxz", "Qxy"), ("Qxy", "x"), ("Qxy", "y")])
     return bic_cherry
+
+# medium network with two colors that can be shared across functions, BMG of this nw differs between weak and strong
+@pytest.fixture
+def medium_two_color_nw(): # example from Stadler in last lecture
+    G = nx.DiGraph()
+    G.add_nodes_from([("y", {"reconc": "red"}), ("y1", {"reconc":'red'}), ("y2", {"reconc":'red'}), ("x", {"reconc":'green'})])
+    G.add_edges_from([("rho", "Pxy"), ("rho", "Pxy1"), ("rho", "Pxy2"), ("Pxy", "y"), ("Pxy", "x"), ("Pxy", "Qxy2"), ("Pxy1", "y1"),
+                      ("Pxy1", "x"), ("Pxy1", "Qxy2"),  # remove this edge later
+                      ("Pxy2", "y2"), ("Pxy2", "x"), ("Pxy2", "Qxy"), ("Qxy", "x"), ("Qxy", "y"), ("Qxy2", "x"), ("Qxy2", "y2")])
+    return G
 
 # Start of unit tests, separated by classes depending on topic
 # class tests for self designed examples of trees and networks
@@ -103,19 +112,74 @@ class TestBMGKnownExamples:
         #print(G.edges(data=True))
         assert nx.utils.graphs_equal(result, G)
 
+    ### -- Test showing that same medium network results in different BMGs depending on definition --
+
+    def test_medium_nw_strong(self, medium_two_color_nw):
+        result = bmg(medium_two_color_nw, mode="strong")
+        G = nx.DiGraph()
+        G.add_nodes_from([("y", {"reconc": "red", 'label': 'y'}), ("y1", {"reconc":'red', 'label': 'y1'}),
+                          ("y2", {"reconc":'red', 'label': 'y2'}), ("x", {"reconc":'green', 'label': 'x'})])
+        G.add_edges_from([("y", "x"), ("y1", "x"), ("y2", "x")])
+        # print(result.edges(data=True))
+        # print(G.edges(data=True))
+        assert nx.utils.graphs_equal(result, G)
+
+    def test_medium_nw_weak(self, medium_two_color_nw):
+        result = bmg(medium_two_color_nw, mode="weak")
+        G = nx.DiGraph()
+        G.add_nodes_from([("y", {"reconc": "red", 'label': 'y'}), ("y1", {"reconc": 'red', 'label': 'y1'}),
+                          ("y2", {"reconc": 'red', 'label': 'y2'}), ("x", {"reconc": 'green', 'label': 'x'})])
+        G.add_edges_from([("y", "x"), ("y1", "x"), ("y2", "x"), ("x", "y"), ("x", "y2")])
+        # print(result.edges(data=True))
+        # print(G.edges(data=True))
+        assert nx.utils.graphs_equal(result, G)
+
 # class tests that weak and strong definition give the same results for trees
 class TestBMGInvariants:
     def test_weak_equals_strong_on_tree(self, medium_three_color_tree):
         T = medium_three_color_tree
         assert nx.utils.graphs_equal(bmg(T, mode="strong"), bmg(T, mode="weak"))
-    #TODO: Add a random tree from Assymetree here as well
 
-#TODO: Add input tests (wrong network, wrong mode) for example like:
-    # def test_invalid_mode_raises(self, small_tree):
-    # T, sigma = small_tree
-        # with pytest.raises(ValueError):
-# bmg(T, sigma, mode="banana")
-    # def test_undirected_graph_raises(self):
-    # G = nx.Graph()  # undirected
-        # with pytest.raises(TypeError):
-# bmg(G, {}, mode="strong")
+    # Test equality between weak and strong on random asymmetree
+    def test_weak_equals_strong_on_asymmetree(self):
+        # species tree
+        S = te.species_tree_n_age(
+            4, 1.0, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
+        )
+        # gene tree
+        T = te.dated_gene_tree(
+            S, dupl_rate=1.0, loss_rate=0, hgt_rate=0.2, gc_rate=0.2, prohibit_extinction="per_species",
+            dupl_polytomy=0.5
+        )
+        # prune all loss branches and the planted root
+        observable_gene_tree = te.prune_losses(T)
+        tree_to_nx = bmg_fun.convert_to_nx(observable_gene_tree)
+        assert nx.utils.graphs_equal(bmg(tree_to_nx, mode="strong"), bmg(tree_to_nx, mode="weak"))
+
+
+# Input tests (wrong network, wrong mode)
+class TestInputVariants:
+    # Test invalid mode
+    def test_invalid_mode_raises(self, medium_three_color_tree):
+        with pytest.raises(ValueError):
+            bmg(medium_three_color_tree, mode="banana")
+    # Test that undirected networkx graph is rejected
+    def test_undirected_graph_raises(self):
+        G = nx.Graph()  # undirected
+        with pytest.raises(TypeError):
+            bmg(G, {}, mode="strong")
+    # Test that asymmetree is rejected
+    def test_asymmetree_raises(self):
+        # species tree
+        S = te.species_tree_n_age(
+            4, 1.0, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
+        )
+        # gene tree
+        T = te.dated_gene_tree(
+            S, dupl_rate=1.0, loss_rate=0, hgt_rate=0.2, gc_rate=0.2, prohibit_extinction="per_species",
+            dupl_polytomy=0.5
+        )
+        # prune all loss branches and the planted root
+        observable_gene_tree = te.prune_losses(T)
+        with pytest.raises(TypeError):
+            bmg(observable_gene_tree, {}, mode="strong")
