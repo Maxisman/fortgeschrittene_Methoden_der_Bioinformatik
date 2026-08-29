@@ -14,8 +14,8 @@ def bmg(G: nx.DiGraph, mode = "weak") -> nx.DiGraph:
     leafAncestors = {}
 
     for leaf in leaves:
-        sigma[leaf] = G.nodes[leaf]["reconc"]
-        BMG.add_node(leaf, reconc = sigma[leaf], label = leaf)
+        sigma[leaf] = G.nodes[leaf]["color"]
+        BMG.add_node(leaf, color = sigma[leaf], label = leaf)
         leafAncestors[leaf] = nx.ancestors(G,leaf) | {leaf}
 
     # Durch Blätter iterieren

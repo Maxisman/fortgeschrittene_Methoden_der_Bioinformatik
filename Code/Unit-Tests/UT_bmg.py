@@ -8,8 +8,8 @@ import asymmetree.treeevolve as te
 @pytest.fixture
 def medium_three_color_tree():
     T = nx.DiGraph()
-    T.add_nodes_from([("a1", {"reconc": "red"}), ("b1", {"reconc": "blue"}), ("c1", {"reconc": "green"}),
-                      ("b2", {"reconc": "blue"}), ("c2", {"reconc": "green"})])
+    T.add_nodes_from([("a1", {"color": "red"}), ("b1", {"color": "blue"}), ("c1", {"color": "green"}),
+                      ("b2", {"color": "blue"}), ("c2", {"color": "green"})])
     T.add_edges_from([("p", "u"), ("u", "a1"), ("u", "w"), ("w", "b1"), ("w", "c1"), ("p", "v"), ("v", "b2"), ("v", "c2")])
     return T
 
@@ -17,8 +17,8 @@ def medium_three_color_tree():
 @pytest.fixture
 def medium_three_color_tree_expected_bmg():
     G = nx.DiGraph()
-    G.add_nodes_from([("a1", {"reconc": "red", 'label': 'a1'}), ("b1", {"reconc": "blue", 'label': 'b1'}), ("c1", {"reconc": "green", 'label': 'c1'}),
-                      ("b2", {"reconc": "blue", 'label': 'b2'}), ("c2", {"reconc": "green", 'label': 'c2'})])
+    G.add_nodes_from([("a1", {"color": "red", 'label': 'a1'}), ("b1", {"color": "blue", 'label': 'b1'}), ("c1", {"color": "green", 'label': 'c1'}),
+                      ("b2", {"color": "blue", 'label': 'b2'}), ("c2", {"color": "green", 'label': 'c2'})])
     G.add_edges_from([("a1", "c1"), ("c1", "a1"), ("b1", "a1"), ("a1", "b1"), ("c2", "a1"), ("b2", "a1"), ("b1", "c1"), ("c1", "b1"),
                       ("b2", "c2"), ("c2", "b2")])
     return G
@@ -27,7 +27,7 @@ def medium_three_color_tree_expected_bmg():
 @pytest.fixture
 def bic_cherry_nw(): # example from bmg_in_networks paper
     bic_cherry = nx.DiGraph()
-    bic_cherry.add_nodes_from([("y", {"reconc": "red"}), ("x", {"reconc": "blue"}), ("z", {"reconc": "red"})])
+    bic_cherry.add_nodes_from([("y", {"color": "red"}), ("x", {"color": "blue"}), ("z", {"color": "red"})])
     bic_cherry.add_edges_from([("p", "Pxy"), ("Pxy", "y"), ("Pxy", "x"), ("Pxy", "Qxz"), ("Qxz", "x"), ("Qxz", "z"),
                                ("p", "Pxz"), ("Pxz", "z"), ("Pxz", "x"), ("Pxz", "Qxy"), ("Qxy", "x"), ("Qxy", "y")])
     return bic_cherry
@@ -36,7 +36,7 @@ def bic_cherry_nw(): # example from bmg_in_networks paper
 @pytest.fixture
 def medium_two_color_nw(): # example from Stadler in last lecture
     G = nx.DiGraph()
-    G.add_nodes_from([("y", {"reconc": "red"}), ("y1", {"reconc":'red'}), ("y2", {"reconc":'red'}), ("x", {"reconc":'green'})])
+    G.add_nodes_from([("y", {"color": "red"}), ("y1", {"color":'red'}), ("y2", {"color":'red'}), ("x", {"color":'green'})])
     G.add_edges_from([("rho", "Pxy"), ("rho", "Pxy1"), ("rho", "Pxy2"), ("Pxy", "y"), ("Pxy", "x"), ("Pxy", "Qxy2"), ("Pxy1", "y1"),
                       ("Pxy1", "x"), ("Pxy1", "Qxy2"),  # remove this edge later
                       ("Pxy2", "y2"), ("Pxy2", "x"), ("Pxy2", "Qxy"), ("Qxy", "x"), ("Qxy", "y"), ("Qxy2", "x"), ("Qxy2", "y2")])
@@ -48,11 +48,11 @@ class TestBMGKnownExamples:
     def test_small_two_color_tree(self):
         # create small tree wot two colors
         T = nx.DiGraph()
-        T.add_nodes_from([("x", {"reconc": "red"}), ("y", {"reconc": "blue"})])
+        T.add_nodes_from([("x", {"color": "red"}), ("y", {"color": "blue"})])
         T.add_edges_from([("p", "x"), ("p", "y")])
         # create corresponding bmg
         G = nx.DiGraph()
-        G.add_nodes_from([("x", {"reconc": "red", 'label': 'x'}), ("y", {"reconc": "blue", 'label': 'y'})])
+        G.add_nodes_from([("x", {"color": "red", 'label': 'x'}), ("y", {"color": "blue", 'label': 'y'})])
         G.add_edges_from([("x", "y"), ("y", "x")])
         # get result from bmg function
         result = bmg(T, mode="strong")
@@ -61,11 +61,11 @@ class TestBMGKnownExamples:
     def test_small_three_color_tree(self):
         # create small tree with three colors
         T = nx.DiGraph()
-        T.add_nodes_from([("x", {"reconc": "red"}), ("y", {"reconc": "blue"}), ("z", {"reconc": "green"})])
+        T.add_nodes_from([("x", {"color": "red"}), ("y", {"color": "blue"}), ("z", {"color": "green"})])
         T.add_edges_from([("p", "u"), ("p", "z"), ("u", "x"), ("u", "y")])
         # create corresponding bmg
         G = nx.DiGraph()
-        G.add_nodes_from([("x", {"reconc": "red", 'label': 'x'}), ("y", {"reconc": "blue", 'label': 'y'}), ("z", {"reconc": "green", 'label': 'z'})])
+        G.add_nodes_from([("x", {"color": "red", 'label': 'x'}), ("y", {"color": "blue", 'label': 'y'}), ("z", {"color": "green", 'label': 'z'})])
         G.add_edges_from([("x", "y"), ("y", "x"), ("x", "z"), ("y", "z"), ("z", "y"), ("z", "x")])
         # get result from bmg function
         result = bmg(T, mode="strong")
@@ -97,7 +97,7 @@ class TestBMGKnownExamples:
     def test_bic_cherry_strong(self, bic_cherry_nw):
         result = bmg(bic_cherry_nw, mode="strong")
         G = nx.DiGraph()
-        G.add_nodes_from([("y", {"reconc": "red", 'label': 'y'}), ("x", {"reconc": "blue", 'label': 'x'}), ("z", {"reconc": "red", 'label': 'z'})])
+        G.add_nodes_from([("y", {"color": "red", 'label': 'y'}), ("x", {"color": "blue", 'label': 'x'}), ("z", {"color": "red", 'label': 'z'})])
         G.add_edges_from([("y", "x"), ("z", "x")])
         #print(result.edges(data=True))
         #print(G.edges(data=True))
@@ -106,7 +106,7 @@ class TestBMGKnownExamples:
     def test_bic_cherry_weak(self, bic_cherry_nw):
         result = bmg(bic_cherry_nw, mode="weak")
         G = nx.DiGraph()
-        G.add_nodes_from([("y", {"reconc": "red", 'label': 'y'}), ("x", {"reconc": "blue", 'label': 'x'}), ("z", {"reconc": "red", 'label': 'z'})])
+        G.add_nodes_from([("y", {"color": "red", 'label': 'y'}), ("x", {"color": "blue", 'label': 'x'}), ("z", {"color": "red", 'label': 'z'})])
         G.add_edges_from([("y", "x"), ("z", "x"), ("x", "y"), ("x", "z")])
         #print(result.edges(data=True))
         #print(G.edges(data=True))
@@ -117,8 +117,8 @@ class TestBMGKnownExamples:
     def test_medium_nw_strong(self, medium_two_color_nw):
         result = bmg(medium_two_color_nw, mode="strong")
         G = nx.DiGraph()
-        G.add_nodes_from([("y", {"reconc": "red", 'label': 'y'}), ("y1", {"reconc":'red', 'label': 'y1'}),
-                          ("y2", {"reconc":'red', 'label': 'y2'}), ("x", {"reconc":'green', 'label': 'x'})])
+        G.add_nodes_from([("y", {"color": "red", 'label': 'y'}), ("y1", {"color":'red', 'label': 'y1'}),
+                          ("y2", {"color":'red', 'label': 'y2'}), ("x", {"color":'green', 'label': 'x'})])
         G.add_edges_from([("y", "x"), ("y1", "x"), ("y2", "x")])
         # print(result.edges(data=True))
         # print(G.edges(data=True))
@@ -127,8 +127,8 @@ class TestBMGKnownExamples:
     def test_medium_nw_weak(self, medium_two_color_nw):
         result = bmg(medium_two_color_nw, mode="weak")
         G = nx.DiGraph()
-        G.add_nodes_from([("y", {"reconc": "red", 'label': 'y'}), ("y1", {"reconc": 'red', 'label': 'y1'}),
-                          ("y2", {"reconc": 'red', 'label': 'y2'}), ("x", {"reconc": 'green', 'label': 'x'})])
+        G.add_nodes_from([("y", {"color": "red", 'label': 'y'}), ("y1", {"color": 'red', 'label': 'y1'}),
+                          ("y2", {"color": 'red', 'label': 'y2'}), ("x", {"color": 'green', 'label': 'x'})])
         G.add_edges_from([("y", "x"), ("y1", "x"), ("y2", "x"), ("x", "y"), ("x", "y2")])
         # print(result.edges(data=True))
         # print(G.edges(data=True))

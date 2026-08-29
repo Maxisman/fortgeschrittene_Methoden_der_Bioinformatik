@@ -1,6 +1,6 @@
 from network_editing_operations import *
 from graph_functionality import graphs_equal
-from bmg_fun import compute_bmg
+from bmg_Tony import bmg
 import networkx as nx
 from copy import deepcopy
 from _collections_abc import Callable
@@ -99,7 +99,7 @@ def helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function,
         return (tree_likeness_function(G))
 
 
-def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callable[[nx.DiGraph, dict], nx.DiGraph] = compute_bmg, top_n:int = 10, step_size:int = 3, tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness): #TODO: add Julias bmg function as default
+def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, top_n:int = 10, step_size:int = 3, tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness): #TODO: add Julias bmg function as default
     """
     Tries to make a set of networks more tree-like while conserving the network's best match graph. This is achieved by calculating the neighborhood of a graph for up to step_size steps and then taking the top n graphs according to the tree likeness.
 
@@ -120,7 +120,7 @@ def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callab
     """
 
     NEGATIVE_INFINITY = -1000000
-    bmg = bmg_function(graphs[0], coloring)
+    bmg = bmg_function(graphs[0], "strong")
 
     for step in range(step_size):
         neighborhood = []

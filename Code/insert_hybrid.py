@@ -72,7 +72,7 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
         N_mod.add_node(label,
                     label = label,
                     event = 'H',
-                    reconc = N_mod.nodes[edgeParent]["reconc"], # gibt an zu welcher Spezies es gehört nochmal herausfinden, was genau zeine Liste an dieser Stelle bedeutet
+                    color = N_mod.nodes[edgeParent]["color"], # gibt an zu welcher Spezies es gehört nochmal herausfinden, was genau zeine Liste an dieser Stelle bedeutet
                     tstamp = tstampHybrid,
                     # transferred = ,
                     dist = distHybrid
@@ -99,7 +99,7 @@ def color_leaves(N):
 
     # Einzigartige Spezies der Blätter sammeln und ihnen Farben zuweisen
     # Wir nutzen ein Set, um Duplikate zu vermeiden
-    unique_species = list(set(N.nodes[node]["reconc"] for node in leaves))
+    unique_species = list(set(N.nodes[node]["color"] for node in leaves))
 
     # Farbpalette generieren (z. B. 'Set1', 'tab10' oder 'viridis')
     cmap = cm.get_cmap("Set1", len(unique_species))
@@ -115,7 +115,7 @@ def color_leaves(N):
 
     for node in N.nodes():
         if node in leaves:
-            species = N.nodes[node]["reconc"]
+            species = N.nodes[node]["color"]
             node_colors.append(species_to_color[species])
         else:
             node_colors.append(default_color)

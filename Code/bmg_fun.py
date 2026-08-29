@@ -21,8 +21,8 @@ def compute_bmg(T, sigma):
     for node, color in sigma.items():
         # BMG.add_node(node, color=color)   # Alte Erstellung der Nodes
 
-        # Änderung von Tony, um die Graphen vergleichbar zu machen:
-        BMG.add_node(node, reconc = T.nodes[node]["reconc"], label = node) 
+        # Änderung von Tony, um die Graphen vergleichbar zu machen, neu geändert zu color!:
+        BMG.add_node(node, reconc = T.nodes[node]["color"], label = node)
 
     # second, add edges to nodes for best matches
     # loop through all leaves
@@ -67,7 +67,10 @@ def convert_to_nx(T) -> nx.DiGraph:
     for v in T.preorder():
         graph.add_node(v.label)
         for key, value in v.attributes():
-            graph.nodes[v.label][key] = value
+            if key == "reconc":
+                graph.nodes[v.label]["color"] = value
+            else:
+                graph.nodes[v.label][key] = value
 
     for u, v, sibling_nr in T.edges_sibling_order():
         if u is v:
