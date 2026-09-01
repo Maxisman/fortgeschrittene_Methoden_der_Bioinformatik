@@ -71,12 +71,12 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
         distHybrid = (N_mod.nodes[edgeParent]["dist"] + N_mod.nodes[edgeChild]["dist"])/2
 
         N_mod.add_node(label,
-                    label = label,
-                    event = 'H',
+                    # label = label,
+                    # event = 'H',
                     reconc = N_mod.nodes[edgeParent]["reconc"], # gibt an zu welcher Spezies es gehört nochmal herausfinden, was genau zeine Liste an dieser Stelle bedeutet
-                    tstamp = tstampHybrid,
+                    # tstamp = tstampHybrid,
                     # transferred = ,
-                    dist = distHybrid
+                    # dist = distHybrid
                     )
         
         N_mod.add_edges_from([(edgeParent,label),(label,edgeChild)])
@@ -319,6 +319,7 @@ def bmg(G: nx.DiGraph, mode = "weak"):
                     if isBestMatch:
                         BMG.add_edge(x,y)
     return BMG
+
 
 def biccherry(G: nx.DiGraph):
     BCN = nx.DiGraph()
