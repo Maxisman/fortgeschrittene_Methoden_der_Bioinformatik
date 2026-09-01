@@ -71,12 +71,12 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
         distHybrid = (N_mod.nodes[edgeParent]["dist"] + N_mod.nodes[edgeChild]["dist"])/2
 
         N_mod.add_node(label,
-                    # label = label,
-                    # event = 'H',
+                    label = label,
+                    event = 'H',
                     reconc = N_mod.nodes[edgeParent]["reconc"], # gibt an zu welcher Spezies es gehört nochmal herausfinden, was genau zeine Liste an dieser Stelle bedeutet
-                    # tstamp = tstampHybrid,
+                    tstamp = tstampHybrid,
                     # transferred = ,
-                    # dist = distHybrid
+                    dist = distHybrid
                     )
         
         N_mod.add_edges_from([(edgeParent,label),(label,edgeChild)])
@@ -85,7 +85,7 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
 
         N_mod.add_edge(label,node)
         
-        print(f"Es wurde ein Hybrid zwischen node {N_mod.nodes[edgeParent]["label"]} und node {N_mod.nodes[edgeChild]["label"]} eingefügt und dieser wurde mit Node {N_mod.nodes[node]["label"]} verbunden") 
+        # print(f"Es wurde ein Hybrid zwischen node {N_mod.nodes[edgeParent]["label"]} und node {N_mod.nodes[edgeChild]["label"]} eingefügt und dieser wurde mit Node {N_mod.nodes[node]["label"]} verbunden") 
         
         ### Exit Assertions:
         assert not N_mod.has_edge(edgeParent, edgeChild), "Alte Kante existiert noch!"
@@ -347,7 +347,7 @@ def biccherry(G: nx.DiGraph):
 
     for (x,y), p_name in cherryParents.items(): 
         if not G.has_edge(x,y):
-            # Kandidatrn wählen nach folgender Priorisierung:
+            # Kandidaten wählen nach folgender Priorisierung:
             # 1. Best Match von x
             # 2. x ist Best Match von y
             # 3. random
