@@ -65,17 +65,17 @@ def convert_to_nx(T) -> nx.DiGraph:
     #    return graph, None
 
     for v in T.preorder():
-        graph.add_node(v.label)
+        graph.add_node(str(v.label))
         for key, value in v.attributes():
             if key == "reconc":
-                graph.nodes[v.label]["color"] = value
+                graph.nodes[str(v.label)]["color"] = value
             else:
-                graph.nodes[v.label][key] = value
+                graph.nodes[str(v.label)][key] = value
 
     for u, v, sibling_nr in T.edges_sibling_order():
         if u is v:
             raise RuntimeError(f"loop at {u} and {v}")
-        graph.add_edge(u.label, v.label)
-        graph.nodes[v.label]["sibling_nr"] = sibling_nr
+        graph.add_edge(str(u.label), str(v.label))
+        graph.nodes[str(v.label)]["sibling_nr"] = sibling_nr
 
     return graph

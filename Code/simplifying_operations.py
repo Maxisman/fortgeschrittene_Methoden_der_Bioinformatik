@@ -93,7 +93,7 @@ def helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function,
     """
     Helper for beam_search(). Returns a score of tree likeness or NEGATIVE_INFINITY if the network's bmg is wrong
     """
-    if not graphs_equal(bmg, bmg_function(G, coloring)):
+    if not graphs_equal(bmg, bmg_function(G, mode="strong")):
         return (NEGATIVE_INFINITY)
     else:
         return (tree_likeness_function(G))

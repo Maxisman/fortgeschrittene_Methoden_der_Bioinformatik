@@ -55,14 +55,14 @@ def BICcherry(G: nx.DiGraph) -> nx.DiGraph:
     for pair, p_name in p_nodes.items():
         x,y = sorted(pair)
         if not G.has_edge(x,y):
-            y_prime = rng.choice([str(v) for v in G.nodes() if v != y and colors[str(v)]==colors[str(y)]])
+            y_prime = rng.choice([str(v) for v in G.nodes() if v != y and colors[v]==colors[y]])
             ## insert q_xy' below p_xy
             q_name = f"q_{x}_{y}_{y_prime}"
             N.add_edge(p_name,q_name)
             N.add_edge(q_name, x)
             N.add_edge(q_name, y_prime)
         if not G.has_edge(y,x):
-            x_prime = rng.choice([str(v) for v in G.nodes() if v != x and colors[str(v)]==colors[str(x)]])
+            x_prime = rng.choice([str(v) for v in G.nodes() if v != x and colors[v]==colors[x]])
             ## insert q_yx'' below p_xy
             q_name = f"q_{y}_{x}_{x_prime}"
             N.add_edge(p_name, q_name)

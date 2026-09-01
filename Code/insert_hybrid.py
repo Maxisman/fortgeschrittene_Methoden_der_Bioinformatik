@@ -20,7 +20,8 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
     for _ in range(i):
 
         # max label herausfinden
-        label = max(nx.get_node_attributes(N_mod,"label").values())+1
+        label = max([int(v) for v in N_mod.nodes()])+1
+        label = str(label)
         foundPair = False
 
         # Liste mit zufälliger Reihenfolge der Edges und Nodes generieren
@@ -70,9 +71,7 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
         distHybrid = (N_mod.nodes[edgeParent]["dist"] + N_mod.nodes[edgeChild]["dist"])/2
 
         N_mod.add_node(label,
-                    label = label,
                     event = 'H',
-                    color = N_mod.nodes[edgeParent]["color"], # gibt an zu welcher Spezies es gehört nochmal herausfinden, was genau zeine Liste an dieser Stelle bedeutet
                     tstamp = tstampHybrid,
                     # transferred = ,
                     dist = distHybrid
@@ -84,7 +83,7 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
 
         N_mod.add_edge(label,node)
         
-        print(f"Es wurde ein Hybrid zwischen node {N_mod.nodes[edgeParent]["label"]} und node {N_mod.nodes[edgeChild]["label"]} eingefügt und dieser wurde mit Node {N_mod.nodes[node]["label"]} verbunden") 
+        print(f"Es wurde ein Hybrid zwischen node {edgeParent} und node {edgeChild} eingefügt und dieser wurde mit Node {node} verbunden")
         
         ### Exit Assertions:
         assert not N_mod.has_edge(edgeParent, edgeChild), "Alte Kante existiert noch!"
