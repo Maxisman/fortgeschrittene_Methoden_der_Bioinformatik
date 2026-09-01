@@ -89,17 +89,17 @@ def compute_tree_likeness(G):
     """
     return -( len(G.edges()) - 2 * len(G.nodes()))
 
-def helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY):
+def helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode):
     """
     Helper for beam_search(). Returns a score of tree likeness or NEGATIVE_INFINITY if the network's bmg is wrong
     """
-    if not graphs_equal(bmg, bmg_function(G, mode="strong")):
+    if not graphs_equal(bmg, bmg_function(G, mode)):
         return (NEGATIVE_INFINITY)
     else:
         return (tree_likeness_function(G))
 
 
-def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, top_n:int = 10, step_size:int = 3, tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness): #TODO: add Julias bmg function as default
+def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, top_n:int = 10, step_size:int = 3, tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness, mode:str="weak"): #TODO: add Julias bmg function as default
     """
     Tries to make a set of networks more tree-like while conserving the network's best match graph. This is achieved by calculating the neighborhood of a graph for up to step_size steps and then taking the top n graphs according to the tree likeness.
 
@@ -117,10 +117,12 @@ def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callab
         maximum number of editing operations before the bmg and loss will be evaluated. Higher step size allows better operations but decreases performance exponentially.
     loss_function: function
         calculates the loss for tree likeness of a network. Higher values mean more tree-like
+    mode: str
+        either strong or weak, selects best match definition
     """
 
     NEGATIVE_INFINITY = -1000000
-    bmg = bmg_function(graphs[0], "strong")
+    bmg = bmg_function(graphs[0], mode)
 
     for step in range(step_size):
         neighborhood = []
@@ -131,7 +133,7 @@ def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callab
         print(f"Finished step {step + 1}/{step_size}")
 
 
-    scored_graphs = [(helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY), G) for G in graphs]
+    scored_graphs = [(helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode), G) for G in graphs]
     valid_graphs = [(score, G) for score, G in scored_graphs if score > NEGATIVE_INFINITY]
     top_graphs = heapq.nlargest(top_n, valid_graphs, key = lambda x : x[0])
 
