@@ -1,9 +1,10 @@
 from network_editing_operations import *
 from graph_functionality import *
-from simplifying_operations import *
+from simplifying_operations import beam_search
 from bmg_fun import compute_bmg
 import networkx as nx
 from copy import deepcopy
+import BICcherry
 
 
 """
@@ -73,22 +74,24 @@ def generate_tree(seed = 3):
 
     # species tree
     S = te.species_tree_n_age(
-        4, 1.0, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
+        3, 0.5, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
     )
     # gene tree
     T = te.dated_gene_tree(
-        S, dupl_rate=1.0, loss_rate=0, hgt_rate=0.2, gc_rate=0.2, prohibit_extinction="per_species", dupl_polytomy=0.5
+        S, dupl_rate=0.75, loss_rate=0, hgt_rate=0.2, gc_rate=0.2, prohibit_extinction="per_species", dupl_polytomy=0.5
     )
     # prune all loss branches and the planted root
     observable_gene_tree = te.prune_losses(T)
 
     tree_to_nx = bmg_fun.convert_to_nx(observable_gene_tree)
-    network = insert_hybrid.insertHybrid(tree_to_nx, 5)
+    #return insert_hybrid.insertHybrid(tree_to_nx, 3)
 
-    return network
+    return tree_to_nx
 
-G = generate_tree(3)
-display_multiple_trees([G] + beam_search(G, max_number_of_steps=1))
+G = generate_tree(3) #3 and 1 produce assertion errors
+bic_cherry = BICcherry.BICcherry(bmg(G))
+
+display_multiple_trees([G, bic_cherry] + beam_search(bic_cherry, max_number_of_steps=5, top_n=5))
 
 
 
