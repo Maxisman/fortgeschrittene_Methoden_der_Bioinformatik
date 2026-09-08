@@ -48,6 +48,8 @@ if __name__ == "__main__":
     display_multiple_trees([original, G], sigma)
 """
 
+"""
+# test graph, deprecated
 G = nx.DiGraph()
 G.add_nodes_from(['x', 'y1', 'y2', 'y3', "roh", "v"])
 G.add_edges_from([("roh", "v"), ("roh", "y2"),("roh", "y3"), ("v", "x"), ("v", "y1")])
@@ -58,27 +60,43 @@ inverse_edges = ([("x", "pxy1"), ("x", "pxy2"), ("x", "pxy3"), ("y1", "pxy1"), (
                        ("pxy1", "roh"), ("pxy2", "roh"), ("pxy3", "roh"),
                        ("x", "qxy1"), ("x", "qxy2"), ("y1", "qxy1"), ("y1", "qxy2"),
                        ("qxy1", "pxy2"), ("qxy2", "pxy3")])
-BIC_NW.add_edges_from((value, key) for (key, value) in inverse_edges)
+BIC_NW.add_edges_from((value, key) for (key, value) in inverse_edges)"""
 
-modified = deepcopy(BIC_NW)
-neighborhood = generate_editing_neighborhood(G)
-#pull_up(modified, "y3", "pxy3", "roh")
-#pull_up(modified, "x", "pxy3", "roh")
+def generate_tree(seed = 3):
+    import numpy as np
+    import asymmetree.treeevolve as te
+    import bmg_fun
+    import insert_hybrid
 
-#display_multiple_trees(neighborhood, sigma)
+    random.seed(seed)
+    np.random.seed(seed)
 
-for G in neighborhood:
-    remove_non_informative_nodes(G)
+    # species tree
+    S = te.species_tree_n_age(
+        4, 1.0, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
+    )
+    # gene tree
+    T = te.dated_gene_tree(
+        S, dupl_rate=1.0, loss_rate=0, hgt_rate=0.2, gc_rate=0.2, prohibit_extinction="per_species", dupl_polytomy=0.5
+    )
+    # prune all loss branches and the planted root
+    observable_gene_tree = te.prune_losses(T)
 
-remove_equal_graphs(neighborhood)
+    tree_to_nx = bmg_fun.convert_to_nx(observable_gene_tree)
+    network = insert_hybrid.insertHybrid(tree_to_nx, 5)
 
-neighborhood = beam_search_step([G], sigma, compute_bmg, step_size= 3) # this has failed for step_size=3 but I believe this is due to an error in my graph_functionality/lca function which will be dropped anyway so I didnt fix it
-display_multiple_trees([G] + neighborhood, sigma)
+    return network
+
+G = generate_tree(3)
+display_multiple_trees([G] + beam_search(G, max_number_of_steps=1))
+
+
+
+
+
 
 # debug display_multiple_trees function: works not with only one graph
 # van neumann entropie
 
 # pytest: unit tests
 # stepsize erhöhen wenn in lokalem Optimum
-# größere Funktion die andere benutzt
-# timestep = 3?

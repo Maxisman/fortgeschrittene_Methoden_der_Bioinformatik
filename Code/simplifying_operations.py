@@ -1,5 +1,5 @@
 from network_editing_operations import *
-from graph_functionality import graphs_equal
+from graph_functionality import graphs_equal, compute_tree_likeness, helper_tree_likeness
 from bmg_Tony import bmg
 import networkx as nx
 from copy import deepcopy
@@ -80,24 +80,6 @@ def remove_equal_graphs(neighborhood: list[nx.DiGraph]):
         neighborhood.remove(G)
 
     return neighborhood
-
-def compute_tree_likeness(G):
-    """
-    computes the tree likeness score as negative (number of edges - 2* number of nodes). The higher the score the more tree-like
-
-    The idea behind that is that an ideal tree has as few edges as possible (especially no hybrid edges). However each node has at least two edges so we do not want to discourage creating more nodes (for now)
-    """
-    return -( len(G.edges()) - 2 * len(G.nodes()))
-
-def helper_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode):
-    """
-    Helper for beam_search_step(). Returns a score of tree likeness or NEGATIVE_INFINITY if the network's bmg is wrong
-    """
-    if not graphs_equal(bmg, bmg_function(G, mode)):
-        return (NEGATIVE_INFINITY)
-    else:
-        return (tree_likeness_function(G))
-
 
 def beam_search_step(networks:list[nx.DiGraph], 
                      bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, 
