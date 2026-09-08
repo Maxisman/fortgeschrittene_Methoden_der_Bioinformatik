@@ -1,7 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import graphviz_layout
-from bmg_fun import compute_bmg
+from bmg_Tony import bmg
 
 def lists_equal(l1:list, l2:list):
     l1.sort()
@@ -27,11 +27,11 @@ def graphs_equal (G1:nx.DiGraph, G2: nx.DiGraph): #TODO: check whether nodes and
     
     return True
 
-def display_multiple_trees(graphs: list, sigma):
+def display_multiple_trees(graphs: list):
     fig, axes = plt.subplots(2, len(graphs), figsize=(2 * len(graphs), 10))
     for i, G in enumerate(graphs):
         pos = graphviz_layout(G, prog="dot")
         nx.draw(G, pos, ax=axes[0,i], with_labels=True)
-        bmg = compute_bmg(G, sigma)
-        nx.draw(bmg, nx.circular_layout(bmg), ax=axes[1,i], with_labels=True)
+        gbmg = bmg(G)
+        nx.draw(gbmg, nx.circular_layout(bmg), ax=axes[1,i], with_labels=True)
     plt.show()
