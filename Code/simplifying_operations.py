@@ -99,7 +99,12 @@ def helper_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_
         return (tree_likeness_function(G))
 
 
-def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, top_n:int = 10, step_size:int = 3, tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness, mode:str="weak"):
+def beam_search_step(networks:list[nx.DiGraph], 
+                     bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, 
+                     top_n:int = 10, 
+                     step_size:int = 1, 
+                     tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness, 
+                     mode:str="weak"):
     """
     Tries to make a set of networks more tree-like while conserving the network's best match graph. This is achieved by calculating the neighborhood of a graph for up to step_size steps and then taking the top n graphs according to the tree likeness.
 
@@ -122,21 +127,34 @@ def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callab
     """
 
     NEGATIVE_INFINITY = -1000000
-    bmg = bmg_function(graphs[0], mode)
+    bmg = bmg_function(networks[0], mode)
 
     for step in range(step_size):
         neighborhood = []
-        for G in graphs:
+        for G in networks:
             neighborhood = neighborhood + generate_editing_neighborhood(G)
-        graphs = graphs + neighborhood
-        remove_equal_graphs(graphs) #TODO: make that more efficient
+        networks = networks + neighborhood
+        remove_equal_graphs(networks) #TODO: make that more efficient
         print(f"Finished step {step + 1}/{step_size}")
 
 
-    scored_graphs = [(helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode), G) for G in graphs]
+    scored_graphs = [(helper_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode), G) for G in networks]
     valid_graphs = [(score, G) for score, G in scored_graphs if score > NEGATIVE_INFINITY]
     top_graphs = heapq.nlargest(top_n, valid_graphs, key = lambda x : x[0])
 
     return [G for score, G in top_graphs]
 
     #new_batch = heapq.nlargest(top_n, graphs, key= (lambda G : helper_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY)))
+
+def beam_search(network:nx.DiGraph,
+                max_number_of_steps:int = 100,
+                bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, 
+                top_n:int = 10,
+                step_size:int = 1, 
+                tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness, 
+                mode:str="weak"):
+
+    networks = [network]
+    for _ in range(max_number_of_steps):
+        networks = beam_search_step(networks, bmg_function, top_n, step_size, tree_likeness_function, mode)
+    return(networks)
