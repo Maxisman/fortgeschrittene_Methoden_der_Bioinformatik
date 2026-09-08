@@ -89,9 +89,9 @@ def compute_tree_likeness(G):
     """
     return -( len(G.edges()) - 2 * len(G.nodes()))
 
-def helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode):
+def helper_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode):
     """
-    Helper for beam_search(). Returns a score of tree likeness or NEGATIVE_INFINITY if the network's bmg is wrong
+    Helper for beam_search_step(). Returns a score of tree likeness or NEGATIVE_INFINITY if the network's bmg is wrong
     """
     if not graphs_equal(bmg, bmg_function(G, mode)):
         return (NEGATIVE_INFINITY)
@@ -99,7 +99,7 @@ def helper_tree_likeness(G, coloring, bmg, bmg_function, tree_likeness_function,
         return (tree_likeness_function(G))
 
 
-def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, top_n:int = 10, step_size:int = 3, tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness, mode:str="weak"): #TODO: add Julias bmg function as default
+def beam_search_step(graphs:list[nx.DiGraph], coloring:dict, bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, top_n:int = 10, step_size:int = 3, tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness, mode:str="weak"):
     """
     Tries to make a set of networks more tree-like while conserving the network's best match graph. This is achieved by calculating the neighborhood of a graph for up to step_size steps and then taking the top n graphs according to the tree likeness.
 
