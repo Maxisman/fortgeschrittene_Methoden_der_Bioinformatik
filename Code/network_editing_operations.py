@@ -131,6 +131,9 @@ def remove_hybrid_edge(G:nx.DiGraph, node, parent=None):
     return G
 
 def remove_non_informative_nodes(G:nx.DiGraph):
+    """
+        removes all nodes that have only one predecessor and successor to simplify a network
+    """
     for node in list(G.nodes()):
         if G.in_degree(node) == 1 and G.out_degree(node) == 1:
             G.add_edge(list(G.predecessors(node))[0], list(G.successors(node))[0])
