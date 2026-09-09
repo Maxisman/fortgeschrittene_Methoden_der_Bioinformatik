@@ -1,0 +1,7 @@
+- [ ] Eine Datei für alle Funktionen
+- [ ] Neue Funktion für BMG über die Menge der LCAs
+- [ ] Definitionen konkretisieren
+- [ ] BIC Cherry verbessern
+- [ ] Kann man bei BIC-Cherry gewisse Kanten rauslöschen, ohne dass etwas kaputt geht
+	- [ ] Siehe Code_BICCherryRestrict Kommentar
+- [ ] kann man nach jeder hinzugefügten Kante schauen, ob der BMG bereits der Richtige ist (selektiv Kanten hinzufügen) (erst die BM fixen, die in keine Richtung verbunden sind, vielleicht mit nur einer Kante, dann wenn der BMG noch nicht stimmt, weiter machen)
