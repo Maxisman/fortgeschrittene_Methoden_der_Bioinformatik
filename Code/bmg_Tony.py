@@ -107,3 +107,59 @@ def bmg(G: nx.DiGraph, mode = "weak") -> nx.DiGraph:
                     if isBestMatch:
                         BMG.add_edge(x,y)
     return BMG
+
+
+
+def bmg_fast(G: nx.DiGraph, mode: str = "weak") -> nx.DiGraph:
+    if mode not in ("weak", "strong"):
+        raise ValueError(f"mode must be 'weak' or 'strong', got {mode!r}")
+
+    BMG = nx.DiGraph()
+
+    # 1. Blätter & Spezies-Zuordnung (sigma)
+    leaves = [node for node in G.nodes() if G.out_degree(node) == 0]
+    sigma = {leaf: G.nodes[leaf]["color"] for leaf in leaves}
+    
+    for leaf, color in sigma.items():
+        BMG.add_node(leaf, color=color)
+
+    # 2. Vorfahren inklusive Eigenknoten vorausberechnen
+    leaf_ancestors = {leaf: nx.ancestors(G, leaf) | {leaf} for leaf in leaves}
+    colors = set(sigma.values())
+
+    # 3. Best Matches berechnen
+    for x in leaves:
+        x_anc = leaf_ancestors[x]
+        color_x = sigma[x]
+
+        for target_color in (colors - {color_x}):
+            target_leaves = [y for y in leaves if sigma[y] == target_color]
+            if not target_leaves:
+                continue
+
+            # --- Menge M(x, B) direkt bestimmen ---
+            # Gemeinsame Vorfahren von x und ALLEN Blättern der Zielspezies B
+            all_target_anc = set().union(*(leaf_ancestors[y] for y in target_leaves))
+            common_species_anc = x_anc & all_target_anc
+
+            # M(x, B) sind die tiefsten Knoten (out_degree == 0 im Teilgraphen)
+            sub_M = G.subgraph(common_species_anc)
+            M_xB = {node for node in sub_M.nodes if sub_M.out_degree(node) == 0}
+
+            # --- Vergleiche für jedes y in B via Mengenoperationen ---
+            for y in target_leaves:
+                common_xy = x_anc & leaf_ancestors[y]
+                sub_xy = G.subgraph(common_xy)
+                lcas_xy = {node for node in sub_xy.nodes if sub_xy.out_degree(node) == 0}
+
+                if mode == "weak":
+                    # LCA(x, y) ∩ M(x, B) ≠ ∅
+                    if lcas_xy & M_xB:
+                        BMG.add_edge(x, y)
+
+                elif mode == "strong":
+                    # LCA(x, y) ⊆ M(x, B)
+                    if lcas_xy.issubset(M_xB):
+                        BMG.add_edge(x, y)
+
+    return BMG

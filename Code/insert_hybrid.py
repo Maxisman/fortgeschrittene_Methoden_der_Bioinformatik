@@ -83,7 +83,7 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
 
         N_mod.add_edge(label,node)
         
-        print(f"Es wurde ein Hybrid zwischen node {edgeParent} und node {edgeChild} eingefügt und dieser wurde mit Node {node} verbunden")
+        # print(f"Es wurde ein Hybrid zwischen node {edgeParent} und node {edgeChild} eingefügt und dieser wurde mit Node {node} verbunden")
         
         ### Exit Assertions:
         assert not N_mod.has_edge(edgeParent, edgeChild), "Alte Kante existiert noch!"

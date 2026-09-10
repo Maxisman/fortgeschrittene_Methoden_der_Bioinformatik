@@ -2,6 +2,8 @@ import random
 import networkx as nx
 import matplotlib.cm as cm
 import itertools
+import numpy as np
+import asymmetree.treeevolve as te
 
 def insertHybrid(N:nx.DiGraph, i:int = 1):
 
@@ -397,3 +399,25 @@ def biccherry(G: nx.DiGraph):
                 BCN.remove_edge(p_name,y)
                 
     return BCN
+
+def generateTree(seed:int = None, nSpecies:int = 2):
+
+    if seed:
+        # Setze den Seed für Pythons Standard-Zufallsfunktionen
+        random.seed(seed)
+        # Setze den Seed für NumPys Zufallsfunktionen (wichtig für AsymmeTree)
+        np.random.seed(seed)
+
+    # species tree
+    speciesTree = te.species_tree_n(
+        n= nSpecies
+        #, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
+    )
+    # gene tree
+    T = te.dated_gene_tree(
+        speciesTree, dupl_rate=1.0, loss_rate=0, hgt_rate=0.2, gc_rate=0.2, prohibit_extinction="per_species", dupl_polytomy=0.5
+    )
+    # prune all loss branches and the planted root
+    geneTree = te.prune_losses(T)
+    
+    return speciesTree, geneTree

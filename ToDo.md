@@ -1,0 +1,9 @@
+- [ ] Eine Datei für alle Funktionen
+- [ ] Neue Funktion für BMG über die Menge der LCAs
+- [ ] Definitionen konkretisieren
+- [ ] BIC Cherry verbessern
+- [ ] Kann man bei BIC-Cherry gewisse Kanten rauslöschen, ohne dass etwas kaputt geht
+	- [ ] Siehe Code_BICCherryRestrict Kommentar
+- [ ] kann man nach jeder hinzugefügten Kante schauen, ob der BMG bereits der Richtige ist (selektiv Kanten hinzufügen) (erst die BM fixen, die in keine Richtung verbunden sind, vielleicht mit nur einer Kante, dann wenn der BMG noch nicht stimmt, weiter machen)
+- [ ] Funktion für Vereinfachung der Genbäume (alle Gene einer Spezies die aus der selben Speziation entstanden sind zu einem Gen zusammenfassen)?
+- [ ] Kann man im BIC Cherry nur die p-Knoten einfügen, für die es im BMG eine Verbindung gibt? Und dann mit den Q-Knoten erweitern?
