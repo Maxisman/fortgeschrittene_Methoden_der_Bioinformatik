@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import random
 import copy
+import itertools
 
 from networkx.drawing.nx_pydot import graphviz_layout
 from asymmetree.visualization.tree_vis import assign_colors
@@ -101,96 +102,102 @@ def breakBMG(seed:int,nSpecies:int=2,mode:str = "weak"):
     nx.draw(BMGBC, nx.circular_layout(BMG), nodelist=nodes_list, node_color= nodes_colors, ax=axes[1,1], with_labels=True)
 
 
-import networkx as nx
-from collections import Counter
-import random
-rng = random.Random(42)
+def extend_cherry(
+    BCN: nx.DiGraph, p_name: str, x: str, z: str, q_counter: int) -> int:
+    current_parent = None
+    for pred in BCN.predecessors(x):
+        if pred == p_name or nx.has_path(BCN, p_name, pred):
+            current_parent = pred
+            break
 
-def BICcherryRestrict(G: nx.DiGraph) -> nx.DiGraph:
-    # ASSERTIONS
-    ## assert colored digraph
-    assert isinstance(G, nx.DiGraph)
-    assert all("color" in G.nodes[v] for v in G.nodes)
+    if current_parent is None:
+        return q_counter
 
-    ## assert properly colored (no edges between same color)
-    colors = nx.get_node_attributes(G,"color")
-    for u,v in G.edges():
-        assert colors[u] != colors[v]
+    q_name = f"q_{x}_{z}_{q_counter}"
 
-    ## assert sicor in hub
-    ### find all sicors
-    color_counts = Counter(colors.values())
-    sicor = [v for v,c in colors.items() if color_counts[c]==1]
-    ### assert in-hub-ness
-    for s in sicor:
-        for u in G.nodes():
-            if colors[u] != colors[s]:
-                assert G.has_edge(u,s)
+    BCN.add_edge(current_parent, q_name)
+    BCN.add_edge(q_name, x)
+    BCN.add_edge(q_name, z)
 
-    # BIC-CHERRY
-    ## initialize and root network digraph
-    N = nx.DiGraph()
-    N.add_node("rho")
+    BCN.remove_edge(current_parent, x)
 
-    ## extract differently colored leafs from G
-    cherrylist = []
-    for key1, value1 in colors.items():
-        for key2, value2 in colors.items():
-            if key1 < key2 and value1 != value2:
-                cherrylist.append(frozenset({key1, key2}))
-    ## add leaves and parent nodes to get uglycherry
-    p_nodes = dict()
-    for pair in cherrylist:
-        x,y = sorted(pair)
-        p_name = f"p_{x}_{y}"
-        p_nodes[pair] = p_name
-        N.add_edge("rho",p_name)
-        N.add_edge(p_name, x)
-        N.add_edge(p_name, y)
-    ## add back color property to nodes
-    for node, color in colors.items():
-        N.nodes[node]["color"] = color
+    # if BCN.has_edge(pred,z):
+    #     BCN.remove_edge(pred,z)
 
-    # EXTENSION
-    ## find all cherrys x,y in N that don't have an edge x,y or y,x in G
-    ### find *any* (optimize here? random for now) another x' or y' that has an edge in G
-    ### introduce q_xy' or q_yx' below the corresponding p_xy or p_yx
-    for pair, p_name in p_nodes.items():
-        x,y = sorted(pair)
-        if not G.has_edge(x,y):
-            y_prime = rng.choice([v for v in G.successors(x) if colors[v]==colors[y]])
-            ## insert q_xy' below p_xy
-            q_name = f"q_{x}_{y}_{y_prime}"
-            N.add_edge(p_name,q_name)
-            N.add_edge(q_name, x)
-            N.add_edge(q_name, y_prime)
-
-            
-            ### Test ob das was verbessert oder alles kaputt macht
-            if N.has_edge(p_name,x):
-                N.remove_edge(p_name,x)
-
-            if nx.utils.graphs_equal(G,bmg_fast(N)):
-                return N
+    return q_counter + 1
 
 
-        if not G.has_edge(y,x):
-            x_prime = rng.choice([v for v in G.successors(y) if colors[v]==colors[x]])
-            ## insert q_yx'' below p_xy
-            q_name = f"q_{y}_{x}_{x_prime}"
-            N.add_edge(p_name, q_name)
-            N.add_edge(q_name, y)
-            N.add_edge(q_name, x_prime)
+def biccherry(G: nx.DiGraph):
+    BCN = nx.DiGraph()
+    BCN.add_node("rho")
 
-            
-            ### Test ob das was verbessert oder alles kaputt macht
-            if N.has_edge(p_name,y):
-                N.remove_edge(p_name,y)
+    for leaf in G.nodes():
+        BCN.add_node(leaf, color=G.nodes[leaf]["color"], label=leaf)
 
-            if nx.utils.graphs_equal(G,bmg_fast(N)):
-                return N
+    if len(G.nodes()) == 2:
+        for leaf in G.nodes():
+            BCN.add_edge("rho", leaf)
+        return BCN
 
-    if not nx.utils.graphs_equal(G,bmg_fast(N)):
-        print("leider konnte nicht der Richtige BMG generiert werden")
-    # return network
-    return N
+    cherryParents = {}
+    q_counter = 0
+
+    for x, y in itertools.combinations(G.nodes(), 2):
+        if G.nodes[x]["color"] != G.nodes[y]["color"]:
+            p_name = f"p_{x}_{y}"
+            BCN.add_edge("rho", p_name)
+            BCN.add_edge(p_name, x)
+            BCN.add_edge(p_name, y)
+            cherryParents[(x, y)] = p_name
+
+    for (x, y), p_name in cherryParents.items():
+
+        # --- Richtung x -> y ---
+        if not G.has_edge(x, y):
+            candidates = [
+                z
+                for z in G.successors(x)
+                if G.nodes[z]["color"] == G.nodes[y]["color"]
+            ]
+            if not candidates:
+                candidates = [
+                    z
+                    for z in G.predecessors(x)
+                    if G.nodes[z]["color"] == G.nodes[y]["color"] and z != y
+                ]
+            if not candidates:
+                candidates = [
+                    z
+                    for z in G.nodes()
+                    if G.nodes[z]["color"] == G.nodes[y]["color"] and z != y
+                ]
+
+            if candidates:
+                z = random.choice(candidates)
+                q_counter = extend_cherry(BCN, p_name, x, z, q_counter)
+
+        # --- Richtung y -> x ---
+        if not G.has_edge(y, x):
+            candidates = [
+                z
+                for z in G.successors(y)
+                if G.nodes[z]["color"] == G.nodes[x]["color"]
+            ]
+            if not candidates:
+                candidates = [
+                    z
+                    for z in G.predecessors(y)
+                    if G.nodes[z]["color"] == G.nodes[x]["color"] and z != x
+                ]
+            if not candidates:
+                candidates = [
+                    z
+                    for z in G.nodes()
+                    if G.nodes[z]["color"] == G.nodes[x]["color"] and z != x
+                ]
+
+            if candidates:
+                z = random.choice(candidates)
+                q_counter = extend_cherry(BCN, p_name, y, z, q_counter)
+
+    return BCN

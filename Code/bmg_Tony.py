@@ -152,9 +152,6 @@ def bmg_fast(G: nx.DiGraph, mode: str = "weak") -> nx.DiGraph:
                 sub_xy = G.subgraph(common_xy)
                 lcas_xy = {node for node in sub_xy.nodes if sub_xy.out_degree(node) == 0}
 
-                print("die Lcas von",x,"und",y, "sind",lcas_xy)
-                print("die Menge der kleinen ancestors zwischen",x,"und Spezies",sigma[y],"sind",M_xB)
-
                 if mode == "weak":
                     # LCA(x, y) ∩ M(x, B) ≠ ∅
                     if lcas_xy & M_xB:
