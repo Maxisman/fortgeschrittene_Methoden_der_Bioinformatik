@@ -47,11 +47,12 @@ def helper_tree_likeness(G, bmg, bmg_function=bmg, tree_likeness_function=comput
 
 def display_multiple_trees(graphs: list):
     fig, axes = plt.subplots(2, max(len(graphs), 2), figsize=(4 * len(graphs), 10))
+    bmg_pos = nx.circular_layout(bmg(graphs[0], "weak"))
     for i, G in enumerate(graphs):
         pos = graphviz_layout(G, prog="dot")
         nx.draw(G, pos, ax=axes[0,i], with_labels=True)
         gbmg = bmg(G)
-        nx.draw(gbmg, nx.circular_layout(gbmg), ax=axes[1,i], with_labels=True)
+        nx.draw(gbmg, bmg_pos, ax=axes[1,i], with_labels=True)
 
         tree_likeness = helper_tree_likeness(G,gbmg)
         bbox = axes[1, i].get_position()

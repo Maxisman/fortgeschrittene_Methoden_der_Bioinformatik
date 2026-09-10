@@ -5,6 +5,7 @@ from bmg_fun import compute_bmg
 import networkx as nx
 from copy import deepcopy
 import BICcherry
+from bmg_Tony import bmg
 
 
 """
@@ -66,7 +67,7 @@ BIC_NW.add_edges_from((value, key) for (key, value) in inverse_edges)"""
 def generate_tree(seed = 3):
     import numpy as np
     import asymmetree.treeevolve as te
-    import bmg_fun
+    from bmg_fun import convert_to_nx
     import insert_hybrid
 
     random.seed(seed)
@@ -83,23 +84,21 @@ def generate_tree(seed = 3):
     # prune all loss branches and the planted root
     observable_gene_tree = te.prune_losses(T)
 
-    tree_to_nx = bmg_fun.convert_to_nx(observable_gene_tree)
+    tree_to_nx = convert_to_nx(observable_gene_tree)
     #return insert_hybrid.insertHybrid(tree_to_nx, 3)
 
     return tree_to_nx
 
 G = generate_tree(3) #3 and 1 produce assertion errors
-bic_cherry = BICcherry.BICcherry(bmg(G))
 
-display_multiple_trees([G, bic_cherry] + beam_search(bic_cherry, max_number_of_steps=5, top_n=5))
+from bmg_Tony import bmg
+bic_cherry = BICcherry.BICcherry(bmg(G, mode="weak"))
 
-
-
-
+display_multiple_trees([G, bic_cherry] + beam_search(bic_cherry, max_number_of_steps=25, top_n=5))
 
 
-# debug display_multiple_trees function: works not with only one graph
 # van neumann entropie
 
 # pytest: unit tests
 # stepsize erhöhen wenn in lokalem Optimum
+# assert nx.utils.graphs_equal(result, G)
