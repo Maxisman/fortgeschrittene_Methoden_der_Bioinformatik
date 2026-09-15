@@ -36,9 +36,9 @@ def compute_tree_likeness(G):
     """
     return -( len(G.edges()) - 1.9 * len(G.nodes())) #2 we need to see which scalar should value many nodes. Too many nodes are just making the graph more complicated unneccessarily
 
-def helper_tree_likeness(G, bmg, bmg_function=bmg, tree_likeness_function=compute_tree_likeness, NEGATIVE_INFINITY = -1000000, mode="weak"):
+def extended_tree_likeness(G, bmg, bmg_function=bmg, tree_likeness_function=compute_tree_likeness, NEGATIVE_INFINITY = -1000000, mode="weak"):
     """
-    Helper for beam_search_step(). Returns a score of tree likeness or NEGATIVE_INFINITY if the network's bmg is wrong
+    Returns a score of tree likeness or NEGATIVE_INFINITY if the network's bmg is wrong
     """
     if not graphs_equal(bmg, bmg_function(G, mode)):
         return (NEGATIVE_INFINITY)
@@ -54,7 +54,7 @@ def display_multiple_trees(graphs: list):
         gbmg = bmg(G)
         nx.draw(gbmg, bmg_pos, ax=axes[1,i], with_labels=True)
 
-        tree_likeness = helper_tree_likeness(G,gbmg)
+        tree_likeness = extended_tree_likeness(G,gbmg)
         bbox = axes[1, i].get_position()
         x_center = (bbox.x0 + bbox.x1) / 2
         fig.text(x_center, bbox.y0 - 0.03, round(tree_likeness, 5), ha="center", fontsize=12)

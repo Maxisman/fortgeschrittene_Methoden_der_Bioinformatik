@@ -1,5 +1,5 @@
 from network_editing_operations import *
-from graph_functionality import graphs_equal, compute_tree_likeness, helper_tree_likeness
+from graph_functionality import graphs_equal, compute_tree_likeness, extended_tree_likeness
 from bmg_Tony import bmg
 import networkx as nx
 from copy import deepcopy
@@ -120,7 +120,7 @@ def beam_search_step(networks:list[nx.DiGraph],
         print(f"Finished step {step + 1}/{step_size}")
 
 
-    scored_graphs = [(helper_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode), G) for G in networks]
+    scored_graphs = [(extended_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode), G) for G in networks]
     valid_graphs = [(score, G) for score, G in scored_graphs if score > NEGATIVE_INFINITY]
     top_graphs = heapq.nlargest(top_n, valid_graphs, key = lambda x : x[0])
 
