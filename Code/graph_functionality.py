@@ -18,7 +18,7 @@ def compute_tree_likeness(G):
 
     The idea behind that is that an ideal tree has as few edges as possible (especially no hybrid edges). However each node has at least two edges so we do not want to discourage creating more nodes (for now)
     """
-    return -( len(G.edges()) - 1.9 * len(G.nodes())) #2 we need to see which scalar should value many nodes. Too many nodes are just making the graph more complicated unneccessarily
+    return -( len(G.edges()) - 1 * len(G.nodes())) #2 we need to see which scalar should value many nodes. Too many nodes are just making the graph more complicated unneccessarily
 
 def extended_tree_likeness(G, bmg, bmg_function=bmg, tree_likeness_function=compute_tree_likeness, NEGATIVE_INFINITY = -1000000, mode="weak"):
     """
