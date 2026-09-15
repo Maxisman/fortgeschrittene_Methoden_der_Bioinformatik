@@ -96,5 +96,3 @@ bic_cherry = BICcherry.BICcherry(bmg(G, mode="weak"))
 
 #display_multiple_trees([G, bic_cherry] + beam_search(bic_cherry, max_number_of_steps=10, top_n=5))
 display_multiple_trees([G, bic_cherry] + [greedy_search(bic_cherry, max_number_of_steps=50)])
-
-

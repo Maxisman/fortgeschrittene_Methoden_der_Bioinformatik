@@ -12,6 +12,8 @@ import heapq
     This script provides methods to simplify a graph network
 """
 
+### BEAM SEARCH
+
 def generate_editing_neighborhood(G: nx.DiGraph):
     """ Generates neighborhood of graphs that can be achieved by one graph edit operation. In each tree redundant and non-informative nodes will be removed.
 
@@ -146,8 +148,12 @@ def beam_search(network:nx.DiGraph,
         networks = beam_search_step(networks, bmg_function, top_n, step_size, tree_likeness_function, mode)
     return(networks)
 
+### GREEDY SEARCH
+
 def try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_function, mode):
-    for grandparent in network.nodes:
+    nodes = list(network.nodes)
+    random.shuffle(nodes)
+    for grandparent in nodes:
         for parent in network.successors(grandparent):
             for child in network.successors(parent):
                 workingcopy = deepcopy(network)
@@ -156,12 +162,14 @@ def try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_func
                 remove_redundant_vertices(workingcopy)
 
                 workingcopy_score = extended_tree_likeness(workingcopy, network_bmg, bmg_function=bmg_function, tree_likeness_function=tree_likeness_function, mode= mode)
-                if workingcopy_score >= score:
+                if workingcopy_score > score:
                     return workingcopy, workingcopy_score, True
     return network, score, False
 
 def try_pulling_down(network, score, network_bmg, bmg_function, tree_likeness_function, mode):
-    for parent in network.nodes:
+    nodes = list(network.nodes)
+    random.shuffle(nodes)
+    for parent in nodes:
         if network.out_degree(parent) <= 1:
             continue
         for child in network.successors(parent):
@@ -175,7 +183,7 @@ def try_pulling_down(network, score, network_bmg, bmg_function, tree_likeness_fu
                 remove_redundant_vertices(workingcopy)
 
                 workingcopy_score = extended_tree_likeness(workingcopy, network_bmg, bmg_function=bmg_function, tree_likeness_function=tree_likeness_function, mode= mode)
-                if workingcopy_score >= score:
+                if workingcopy_score > score:
                     return workingcopy, workingcopy_score, True
     return network, score, False
 
@@ -188,10 +196,10 @@ def greedy_search(network: nx.DiGraph,
     score = extended_tree_likeness(network, network_bmg, bmg_function, tree_likeness_function, mode="weak")
 
     for i in range(max_number_of_steps):
+        print(f"simplifying step {i+1}/{max_number_of_steps}")
         #pull up action
         network, score, valid = try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_function, mode)
         if valid:
-            print(f"pull up move: {i}")
             continue
 
         #pull down action
@@ -199,7 +207,5 @@ def greedy_search(network: nx.DiGraph,
         if not valid:
             print("No further improvements found")
             return network
-        else:
-            print(f"pull down move {i}")
 
     return network
