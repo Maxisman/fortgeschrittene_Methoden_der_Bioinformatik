@@ -74,7 +74,8 @@ def insertHybrid(N:nx.DiGraph, i:int = 1):
                     event = 'H',
                     tstamp = tstampHybrid,
                     # transferred = ,
-                    dist = distHybrid
+                    dist = distHybrid,
+                    color = N_mod.nodes[edgeParent]["color"]
                     )
         
         N_mod.add_edges_from([(edgeParent,label),(label,edgeChild)])
@@ -119,66 +120,97 @@ def color_leaves(N):
         else:
             node_colors.append(default_color)
 
-    return node_colors 
+    return node_colors
 
-def calculate_time_tree_layout(G: nx.DiGraph):
-    """Berechnet ein perfektes Time-Tree-Layout.
+def insertHybrid2(N:nx.DiGraph, i:int = 1):
 
-    Die Y-Achse spiegelt exakt den tstamp wider.
-    Die X-Achse ordnet Blätter kollisionsfrei nebeneinander an.
-    """
-    pos = {}
+    ### Entry Assertions
+    assert isinstance(N, nx.DiGraph), "Eingabe muss ein nx.DiGraph sein!"
+    assert isinstance(i,int), "Anzahl der Hybridisierungsevents muss int ein"
+    assert N.number_of_edges() > 0, "Graph hat keine Kanten!"
 
-    # 1. Finde die Root des Baums (Node ohne Parents)
-    roots = [n for n in G.nodes if G.in_degree(n) == 0]
-    if not roots:
-        # Falls es ein Netzwerk ist und keine klare Root existiert,
-        # nehmen wir die Node mit dem höchsten Timestamp als Startpunkt
-        root = max(G.nodes, key=lambda n: G.nodes[n].get("tstamp", 0))
-    else:
-        root = roots[0]
+    N_mod = N.copy()
 
-    # 2. Finde alle Blätter (Leaves) im Graphen
-    # Bei Netzwerken: Nodes ohne ausgehende Kanten
-    leaves = [n for n in G.nodes if G.out_degree(n) == 0]
+    # Es sollte erst eine Edge und eine dazu passende Node für die Hbridisierung gesucht werden
+    # nur wenn eine passende Kombination gefunden wurde, sollen veränderungen am Baum gemacht werden
 
-    # Trick: Wir sortieren die Blätter basierend auf einer Tiefensuche (DFS) von der Root aus.
-    # Das sorgt dafür, dass geschwisterliche Blätter auf der X-Achse auch nebeneinander landen!
-    dfs_order = list(nx.dfs_preorder_nodes(G, source=root))
-    ordered_leaves = [n for n in dfs_order if n in leaves]
+    cached_predecessors = {}
 
-    # 3. Weise den Blättern gleichmäßige X-Koordinaten zu (z.B. von 0 bis len(leaves)-1)
-    for index, leaf in enumerate(ordered_leaves):
-        pos[leaf] = (float(index), float(G.nodes[leaf].get("tstamp", 0.0)))
+    # Suche nach Edge und Node:
+    for _ in range(i):
 
-    # 4. Berechne die X-Koordinaten für alle inneren Knoten von unten nach oben
-    # Wir wiederholen das, bis alle Knoten eine Position haben (wichtig für komplexe Netzwerke)
-    remaining_nodes = set(G.nodes) - set(ordered_leaves)
+        # max label herausfinden
+        label = max([int(v) for v in N_mod.nodes()])+1
+        label = str(label)
+        foundPair = False
 
-    while remaining_nodes:
-        nodes_to_remove = set()
-        for node in remaining_nodes:
-            children = list(G.successors(node))
+        # Liste mit zufälliger Reihenfolge der Edges und Nodes generieren
+        edgeList = list(N_mod.edges)
+        random.shuffle(edgeList)
 
-            # Ein innerer Knoten kann seine X-Position bestimmen, sobald alle seine Kinder eine Position haben
-            if children and all(child in pos for child in children):
-                # Die X-Position ist das exakte Mittelmaß der X-Positionen aller Kinder
-                avg_x = sum(pos[child][0] for child in children) / len(children)
-                y = float(G.nodes[node].get("tstamp", 0.0))
+        nodeList = list(N_mod.nodes)
+        random.shuffle(nodeList)
 
-                pos[node] = (avg_x, y)
-                nodes_to_remove.add(node)
+        for edge in edgeList:
+            edgeParent = edge[0]
+            edgeChild = edge[1]
 
-        # Falls in einem Durchlauf nichts gelöst wurde (z.B. wegen verbleibender Loops in komplexen Netzwerken),
-        # brechen wir ab und weisen den Resten Standardwerte zu, um Endlosschleifen zu verhindern.
-        if not nodes_to_remove:
-            for node in remaining_nodes:
-                pos[node] = (
-                    random.uniform(0, len(leaves)),
-                    float(G.nodes[node].get("tstamp", 0.0)),
-                )
-            break
+            tstampHybrid = (N_mod.nodes[edgeParent]["tstamp"] + N_mod.nodes[edgeChild]["tstamp"])/2
 
-        remaining_nodes -= nodes_to_remove
+            for node in nodeList:
+                if node not in cached_predecessors:
+                    cached_predecessors[node] = list(N_mod.predecessors(node))
+        
+                nodeParents = cached_predecessors[node]
 
-    return pos
+                if (
+                    N_mod.nodes[node]["tstamp"] < tstampHybrid                      # Node "jünger" als Hybrid ###### dist vs. tstamp???
+                    and edgeParent not in nodeParents                               # Node hat nicht den parent als parent
+                    and edgeChild not in nodeParents                                # Node hat nicht das child als parent
+                    and node != edgeChild
+                    and node != edgeParent
+                    # and N.nodes[node]["reconc"] != N.nodes[label]["reconc"]       # Node andere Spezies als Hybrid; soll das so?
+                    ):
+                    foundPair = True
+                    break
+
+            if foundPair:
+                break
+
+        if not foundPair:
+            print ("No suitable Edges and Nodes found for hybridization Event")
+            return N_mod
+
+        #### Veränderung des Netzwerks:
+
+        # Kante zwischen Parent und Child entfernen
+        N_mod.remove_edge(edgeParent,edgeChild)
+
+        # Hybrid zwischen Parent und Child einbauen
+
+        distHybrid = (N_mod.nodes[edgeParent]["dist"] + N_mod.nodes[edgeChild]["dist"])/2
+
+        N_mod.add_node(label,
+                    event = 'H',
+                    tstamp = tstampHybrid,
+                    # transferred = ,
+                    dist = distHybrid,
+                    color = N_mod.nodes[edgeParent]["color"]
+                    )
+        
+        N_mod.add_edges_from([(edgeParent,label),(label,edgeChild)])
+            
+        # Node mit Hybrid verbinden
+
+        N_mod.add_edge(label,node)
+
+        connectedNodes = (edgeChild,node)
+        
+        # print(f"Es wurde ein Hybrid zwischen node {edgeParent} und node {edgeChild} eingefügt und dieser wurde mit Node {node} verbunden")
+        
+        ### Exit Assertions:
+        assert not N_mod.has_edge(edgeParent, edgeChild), "Alte Kante existiert noch!"
+        assert N_mod.has_edge(label, node), "Verbindung zum Hybriden fehlt!"
+        assert nx.is_directed_acyclic_graph(N_mod), "Zyklus generiert!"
+
+    return N_mod,connectedNodes
