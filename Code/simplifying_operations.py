@@ -136,6 +136,10 @@ def beam_search(network:nx.DiGraph,
                 tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness, 
                 mode:str="weak"):
 
+    """
+        Simplifies a network while keeping its bmg constant through a series of beam search steps. The top n networks get chosen to advance to the next step.
+    """
+
     networks = [network]
     for _ in range(max_number_of_steps):
         networks = beam_search_step(networks, bmg_function, top_n, step_size, tree_likeness_function, mode)
