@@ -1,6 +1,6 @@
 from network_editing_operations import *
 from graph_functionality import *
-from simplifying_operations import beam_search
+from simplifying_operations import beam_search, greedy_search
 from bmg_fun import compute_bmg
 import networkx as nx
 from copy import deepcopy
@@ -94,11 +94,7 @@ G = generate_tree(3) #3 and 1 produce assertion errors
 from bmg_Tony import bmg
 bic_cherry = BICcherry.BICcherry(bmg(G, mode="weak"))
 
-display_multiple_trees([G, bic_cherry] + beam_search(bic_cherry, max_number_of_steps=25, top_n=5))
+#display_multiple_trees([G, bic_cherry] + beam_search(bic_cherry, max_number_of_steps=10, top_n=5))
+display_multiple_trees([G, bic_cherry] + [greedy_search(bic_cherry, max_number_of_steps=50)])
 
 
-# van neumann entropie
-
-# pytest: unit tests
-# stepsize erhöhen wenn in lokalem Optimum
-# assert nx.utils.graphs_equal(result, G)
