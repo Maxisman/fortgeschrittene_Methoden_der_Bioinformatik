@@ -12,22 +12,6 @@ def lists_equal(l1:list, l2:list):
     except ValueError:
         return False
 
-def graphs_equal (G1:nx.DiGraph, G2: nx.DiGraph): #TODO: check whether nodes and edges have same count
-    """
-    checks whether nx.DiGraphs equal one another under the condition that the nodes are named equally
-    """
-    try:
-        for node in G1.nodes():
-            if not lists_equal(list(G1.successors(node)), list(G2.successors(node))):
-                return False
-    except nx.NetworkXError:
-        return False
-    
-    if len(list(G1.nodes())) != len(list(G2.nodes())):
-        return False
-    
-    return True
-
 def compute_tree_likeness(G):
     """
     computes the tree likeness score as negative (number of edges - 2* number of nodes). The higher the score the more tree-like
@@ -40,7 +24,7 @@ def extended_tree_likeness(G, bmg, bmg_function=bmg, tree_likeness_function=comp
     """
     Returns a score of tree likeness or NEGATIVE_INFINITY if the network's bmg is wrong
     """
-    if not graphs_equal(bmg, bmg_function(G, mode)):
+    if not nx.utils.graphs_equal(bmg, bmg_function(G, mode)):
         return (NEGATIVE_INFINITY)
     else:
         return (tree_likeness_function(G))

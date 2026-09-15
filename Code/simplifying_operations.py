@@ -1,5 +1,5 @@
 from network_editing_operations import *
-from graph_functionality import graphs_equal, compute_tree_likeness, extended_tree_likeness
+from graph_functionality import compute_tree_likeness, extended_tree_likeness
 from bmg_Tony import bmg
 import networkx as nx
 from copy import deepcopy
@@ -73,7 +73,7 @@ def remove_equal_graphs(neighborhood: list[nx.DiGraph]):
         for H in neighborhood:
             if H == G:
                 continue
-            if graphs_equal(G, H):
+            if nx.utils.graphs_equal(G, H):
                 removal.append(H)
     
     for G in removal:
