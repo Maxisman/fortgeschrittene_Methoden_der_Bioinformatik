@@ -150,6 +150,26 @@ def beam_search(network:nx.DiGraph,
 
 ### GREEDY SEARCH
 
+# When we can remove an edge while keeping the bmg this automatically improves the score so we do not need to check it explicitly
+def remove_hybrid_edge(network, network_bmg, bmg_function, mode):
+    nodes = list(network.nodes)
+    random.shuffle(nodes)
+    for child in nodes:
+        parents = list(network.predecessors(child))
+        if len(parents) < 2:
+            continue
+
+        random.shuffle(parents)
+        for parent in parents:
+            network.remove_edge(parent, child)
+            new_bmg = bmg_function(network, mode)
+
+            if nx.utils.graphs_equal(network_bmg, new_bmg):
+                return network, True
+            else:
+                network.add_edge(parent, child)
+    return network, False
+
 def try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_function, mode):
     nodes = list(network.nodes)
     random.shuffle(nodes)
@@ -197,6 +217,12 @@ def greedy_search(network: nx.DiGraph,
 
     for i in range(max_number_of_steps):
         print(f"simplifying step {i+1}/{max_number_of_steps}")
+
+        #remove hybrid edges
+        network, valid = remove_hybrid_edge(network, network_bmg, bmg_function, mode)
+        #if valid:          #add back solving the issue
+        #    continue
+
         #pull up action
         network, score, valid = try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_function, mode)
         if valid:
