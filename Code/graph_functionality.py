@@ -2,7 +2,6 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import graphviz_layout
 from bmg_Tony import bmg
-#import simplifying_operations
 
 def lists_equal(l1:list, l2:list):
     l1.sort()
@@ -29,17 +28,30 @@ def extended_tree_likeness(G, bmg, bmg_function=bmg, tree_likeness_function=comp
     else:
         return (tree_likeness_function(G))
 
-def display_multiple_trees(graphs: list):
+def color_dict_to_sequence(G:nx.digraph, node_to_color_dict:dict):
+    if node_to_color_dict == None:
+        return None
+    sequence = []
+    for node in G.nodes:
+        if node in node_to_color_dict.keys():
+            sequence.append(node_to_color_dict[node])
+        else:
+            sequence.append([0.5, 0.5, 0.5, 1.])
+    return sequence
+
+def display_multiple_trees(graphs: list, node_to_color_dict = None):
     fig, axes = plt.subplots(2, max(len(graphs), 2), figsize=(4 * len(graphs), 10))
     bmg_pos = nx.circular_layout(bmg(graphs[0], "weak"))
     for i, G in enumerate(graphs):
         #graph
         pos = graphviz_layout(G, prog="dot")
-        nx.draw(G, pos, ax=axes[0,i], with_labels=True)
+        color_sequence = color_dict_to_sequence(G, node_to_color_dict)
+        nx.draw(G, pos, node_color= color_sequence, ax=axes[0,i], with_labels=True)
 
         #bmg
         gbmg = bmg(G)
-        nx.draw(gbmg, bmg_pos, ax=axes[1,i], with_labels=True)
+        node_color = list(node_to_color_dict.values()) if node_to_color_dict is not None else []
+        nx.draw(gbmg, bmg_pos, node_color= node_color, ax=axes[1,i], with_labels=True)
 
         #tree likeness score
         tree_likeness = extended_tree_likeness(G,gbmg)

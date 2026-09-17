@@ -85,14 +85,19 @@ def generate_tree(seed = 3):
     observable_gene_tree = te.prune_losses(T)
 
     tree_to_nx = convert_to_nx(observable_gene_tree)
-    #return insert_hybrid.insertHybrid(tree_to_nx, 3)
 
-    return tree_to_nx
+    #color stuff
+    from asymmetree.visualization.tree_vis import assign_colors
+    species_colors, gene_colors = assign_colors(S, observable_gene_tree)
+    gene_colors_str = {str(k): v for k, v in gene_colors.items()}
 
-G = generate_tree(3) #3 and 1 produce assertion errors
+    return tree_to_nx, gene_colors_str
+
+G, colors = generate_tree(3) #3 and 1 produce assertion errors
+print(colors)
 
 from bmg_Tony import bmg
 bic_cherry = BICcherry.BICcherry(bmg(G, mode="weak"))
 
 #display_multiple_trees([G, bic_cherry] + beam_search(bic_cherry, max_number_of_steps=10, top_n=5))
-display_multiple_trees([G, bic_cherry] + [greedy_search(bic_cherry, max_number_of_steps=50)])
+display_multiple_trees([G, bic_cherry] + [greedy_search(bic_cherry, max_number_of_steps=50)], colors)
