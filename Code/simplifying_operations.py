@@ -161,6 +161,8 @@ def remove_hybrid_edge(network, network_bmg, bmg_function, mode):
 
         random.shuffle(parents)
         for parent in parents:
+            if network.out_degree(parent) <= 1:
+                continue
             network.remove_edge(parent, child)
             new_bmg = bmg_function(network, mode)
 
@@ -220,8 +222,8 @@ def greedy_search(network: nx.DiGraph,
 
         #remove hybrid edges
         network, valid = remove_hybrid_edge(network, network_bmg, bmg_function, mode)
-        #if valid:          #add back solving the issue
-        #    continue
+        if valid:          #add back solving the issue
+            continue
 
         #pull up action
         network, score, valid = try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_function, mode)
