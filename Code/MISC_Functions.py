@@ -23,7 +23,7 @@ def generateTree(seed:int = None, nSpecies:int = 2):
 
     # species tree
     speciesTree = te.species_tree_n_age(
-        age = 0.5,
+        age = 1.0,
         n = nSpecies
         #, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
     )
@@ -332,9 +332,13 @@ def MultiLayerdBICCherry(BMG: nx.DiGraph, maxLayers: int = 20):
     # Es werden die gerade eingefügten Kanten (x->y) untersucht, ob diese einen Best-Match (y->x) generiert haben, der gar nicht da sein sollte.
     # Ist dies der Fall, wird für y->x eine neue Ebene eingefügt um diese zu trennen
 
-    (BMG.edges() - bmg(BCN).edges())
+    # Problem: neue Kanten nicht eindeutig benannt. Wenn x,y1 und x,y2 fälschlicherweise noch vorhanden sind, und beide durch x,z gelöst werden,
+    # so sollte es zwei neue Knoten geben, allerdings entsteht hier nur ein neuer: layer_x_z
+
+    # (BMG.edges() - bmg(BCN).edges())
     for layer in range(2,maxLayers):
-        if nx.utils.graphs_equal(BMG, bmg(BCN)):
+        currentBMG = bmg(BCN)
+        if nx.utils.graphs_equal(BMG, currentBMG):
             break
 
         
@@ -344,7 +348,7 @@ def MultiLayerdBICCherry(BMG: nx.DiGraph, maxLayers: int = 20):
                 nodeName = insertNode(BCN, layer, prevName, y, z)
                 nextDict[(y,z)] = nodeName
 
-        layer += 1
-        currentDict = copy.deepcopy(nextDict)
+        currentDict = nextDict
+        nextDict = {}
 
     return BCN

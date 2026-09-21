@@ -119,13 +119,19 @@ def bmg_fast(G: nx.DiGraph, mode: str = "weak") -> nx.DiGraph:
     # 1. Blätter & Spezies-Zuordnung (sigma)
     leaves = [node for node in G.nodes() if G.out_degree(node) == 0]
     sigma = {leaf: G.nodes[leaf]["color"] for leaf in leaves}
-    
-    for leaf, color in sigma.items():
-        BMG.add_node(leaf, color=color)
 
     # 2. Vorfahren inklusive Eigenknoten vorausberechnen
     leaf_ancestors = {leaf: nx.ancestors(G, leaf) | {leaf} for leaf in leaves}
     colors = set(sigma.values())
+
+    # 2b. Pro Farbe vorberechnete Vereinigung aller Blatt-Vorfahren
+    color_ancestors = {
+        c: set().union(*(leaf_ancestors[y] for y in leaves if sigma[y] == c))
+        for c in colors
+    }
+
+    for leaf, color in sigma.items():
+        BMG.add_node(leaf, color=color)
 
     # 3. Best Matches berechnen
     for x in leaves:
@@ -139,7 +145,7 @@ def bmg_fast(G: nx.DiGraph, mode: str = "weak") -> nx.DiGraph:
 
             # --- Menge M(x, B) direkt bestimmen ---
             # Gemeinsame Vorfahren von x und ALLEN Blättern der Zielspezies B
-            all_target_anc = set().union(*(leaf_ancestors[y] for y in target_leaves))
+            all_target_anc = color_ancestors[target_color]
             common_species_anc = x_anc & all_target_anc
 
             # M(x, B) sind die tiefsten Knoten (out_degree == 0 im Teilgraphen)
@@ -159,7 +165,7 @@ def bmg_fast(G: nx.DiGraph, mode: str = "weak") -> nx.DiGraph:
 
                 elif mode == "strong":
                     # LCA(x, y) ⊆ M(x, B)
-                    if lcas_xy.issubset(M_xB):
+                    if lcas_xy and lcas_xy.issubset(M_xB):
                         BMG.add_edge(x, y)
 
     return BMG
