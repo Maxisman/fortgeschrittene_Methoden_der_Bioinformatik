@@ -176,9 +176,12 @@ def try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_func
     nodes = list(network.nodes)
     random.shuffle(nodes)
     for grandparent in nodes:
-        for parent in network.successors(grandparent):
-            successors = list(network.successors(parent))
-            for child in successors:
+        grandparent_successors = list(network.successors(grandparent))
+        for parent in grandparent_successors:
+            if network.out_degree(parent) <= 1:
+                continue
+            parent_successors = list(network.successors(parent))
+            for child in parent_successors:
                 network.remove_edge(parent, child)
                 network.add_edge(grandparent, child)
 
@@ -190,7 +193,7 @@ def try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_func
                 else:
                     network.remove_edge(grandparent, child)
                     network.add_edge(parent, child)
-                    
+
     return network, score, False
 
 def try_pulling_down(network, score, network_bmg, bmg_function, tree_likeness_function, mode):
