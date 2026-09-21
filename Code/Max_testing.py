@@ -1,11 +1,10 @@
 from network_editing_operations import *
 from graph_functionality import *
 from simplifying_operations import beam_search, greedy_search
-from bmg_fun import compute_bmg
 import networkx as nx
-from copy import deepcopy
 import BICcherry
 from bmg_Tony import bmg
+from copy import deepcopy
 
 
 """
@@ -68,14 +67,13 @@ def generate_tree(seed = 3):
     import numpy as np
     import asymmetree.treeevolve as te
     from bmg_fun import convert_to_nx
-    import insert_hybrid
 
     random.seed(seed)
     np.random.seed(seed)
 
     # species tree
     S = te.species_tree_n_age(
-        3, 0.5, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
+        3, 0.55, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
     )
     # gene tree
     T = te.dated_gene_tree(
@@ -93,11 +91,12 @@ def generate_tree(seed = 3):
 
     return tree_to_nx, gene_colors_str
 
-G, colors = generate_tree(3) #3 and 1 produce assertion errors
-print(colors)
+G, colors = generate_tree(3)
 
 from bmg_Tony import bmg
 bic_cherry = BICcherry.BICcherry(bmg(G, mode="weak"))
+original_bic = deepcopy(bic_cherry)
 
 #display_multiple_trees([G, bic_cherry] + beam_search(bic_cherry, max_number_of_steps=10, top_n=5))
-display_multiple_trees([G, bic_cherry] + [greedy_search(bic_cherry, max_number_of_steps=50)], colors)
+#display_multiple_trees([G, original_bic] + [greedy_search(bic_cherry, max_number_of_steps=500)], colors)
+display_multiple_trees([G, original_bic], colors)
