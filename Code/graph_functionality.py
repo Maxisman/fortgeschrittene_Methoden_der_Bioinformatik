@@ -50,7 +50,7 @@ def display_multiple_trees(graphs: list, node_to_color_dict = None):
 
         #bmg
         gbmg = bmg(G)
-        node_color = list(node_to_color_dict.values()) if node_to_color_dict is not None else []
+        node_color = color_dict_to_sequence(gbmg, node_to_color_dict)
         nx.draw(gbmg, bmg_pos, node_color= node_color, ax=axes[1,i], with_labels=True)
 
         #tree likeness score
