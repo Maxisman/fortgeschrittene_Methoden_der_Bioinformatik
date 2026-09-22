@@ -17,7 +17,7 @@ def compute_tree_likeness(G):
 
     The idea behind that is that an ideal tree has as few edges as possible (especially no hybrid edges). However each node has at least two edges so we do not want to discourage creating more nodes (for now)
     """
-    return -( len(G.edges()) - 1 * len(G.nodes())) #2 we need to see which scalar should value many nodes. Too many nodes are just making the graph more complicated unneccessarily
+    return -( len(G.edges()) - 0 * len(G.nodes())) #2 we need to see which scalar should value many nodes. Too many nodes are just making the graph more complicated unneccessarily
 
 def extended_tree_likeness(G, bmg, bmg_function=bmg, tree_likeness_function=compute_tree_likeness, NEGATIVE_INFINITY = -1000000, mode="weak"):
     """
@@ -49,7 +49,7 @@ def display_multiple_trees(graphs: list, node_to_color_dict = None):
         nx.draw(G, pos, node_color= color_sequence, ax=axes[0,i], with_labels=True)
 
         #bmg
-        gbmg = bmg(G)
+        gbmg = bmg(G, "weak")
         node_color = color_dict_to_sequence(gbmg, node_to_color_dict)
         nx.draw(gbmg, bmg_pos, node_color= node_color, ax=axes[1,i], with_labels=True)
 
