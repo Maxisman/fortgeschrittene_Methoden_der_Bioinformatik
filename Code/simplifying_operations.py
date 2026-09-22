@@ -172,7 +172,7 @@ def remove_hybrid_edge(network, network_bmg, bmg_function, mode):
                 network.add_edge(parent, child)
     return network, False
 
-def try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_function, mode):
+def try_pulling_up(network, score, network_bmg, allow_equal_score):
     nodes = list(network.nodes)
     random.shuffle(nodes)
     for grandparent in nodes:
@@ -185,18 +185,24 @@ def try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_func
                 network.remove_edge(parent, child)
                 network.add_edge(grandparent, child)
 
-                new_score = extended_tree_likeness(network, network_bmg, bmg_function=bmg_function, tree_likeness_function=tree_likeness_function, mode= mode)
-                if new_score > score:
-                    remove_non_informative_nodes(network)
-                    remove_redundant_vertices(network)
-                    return network, new_score, True
+                new_score = extended_tree_likeness(network, network_bmg, bmg_function=bmg, tree_likeness_function=compute_tree_likeness, mode= "weak")
+                if allow_equal_score:
+                    if new_score >= score:
+                        remove_non_informative_nodes(network)
+                        remove_redundant_vertices(network)
+                        return network, new_score, True
                 else:
-                    network.remove_edge(grandparent, child)
-                    network.add_edge(parent, child)
+                    if new_score > score:
+                        remove_non_informative_nodes(network)
+                        remove_redundant_vertices(network)
+                        return network, new_score, True
+                    
+                network.remove_edge(grandparent, child)
+                network.add_edge(parent, child)
 
     return network, score, False
 
-def try_pulling_down(network, score, network_bmg, bmg_function, tree_likeness_function, mode):
+def try_pulling_down(network, score, network_bmg, allow_equal_score):
     nodes = list(network.nodes)
     random.shuffle(nodes)
     for parent in nodes:
@@ -212,27 +218,38 @@ def try_pulling_down(network, score, network_bmg, bmg_function, tree_likeness_fu
                 remove_non_informative_nodes(workingcopy)
                 remove_redundant_vertices(workingcopy)
 
-                workingcopy_score = extended_tree_likeness(workingcopy, network_bmg, bmg_function=bmg_function, tree_likeness_function=tree_likeness_function, mode= mode)
-                if workingcopy_score > score:
-                    return workingcopy, workingcopy_score, True
+                workingcopy_score = extended_tree_likeness(workingcopy, network_bmg, bmg_function=bmg, tree_likeness_function=compute_tree_likeness, mode= "weak")
+                if allow_equal_score:
+                    if workingcopy_score >= score:
+                        return workingcopy, workingcopy_score, True
+                else:
+                    if workingcopy_score > score:
+                        return workingcopy, workingcopy_score, True
     return network, score, False
 
-def add_cherry_edge(network, network_bmg):
+def create_cherry(network, network_bmg):
     for node in network.nodes:
         if network.out_degree(node) != 0:
             continue
+        node_predecessors = set(network.predecessors(node))
         for target in network.nodes:
-            if network.out_degree(target) != 0 or bool(set(network.predecessors(node)) & set(network.predecessors(target))):
+            target_predecessors = set(network.predecessors(target))
+            if network.out_degree(target) != 0 or bool(node_predecessors & target_predecessors):
                 continue
             if network.nodes[target]["color"] != network.nodes[node]["color"]:
                 continue
-            for parent in network.predecessors(target):
+            for parent in target_predecessors:
                 network.add_edge(parent, node)
-                if not nx.utils.graphs_equal(network_bmg, bmg(network)):
+            for parent in node_predecessors:
+                network.remove_edge(parent, node)
+            if not nx.utils.graphs_equal(network_bmg, bmg(network)):
+                for parent in target_predecessors:
                     network.remove_edge(parent, node)
-                else:
-                    print(f"added cherry edge {parent} - {node}")
-                    return network, True
+                for parent in node_predecessors:
+                    network.add_edge(parent, node)
+            else:
+                print(f"added cherry edge {target_predecessors} - {node}")
+                return network, True
     return network, False
 
 def greedy_search(network: nx.DiGraph,
@@ -242,28 +259,40 @@ def greedy_search(network: nx.DiGraph,
                   mode:str="weak"):
     network_bmg = bmg_function(network, mode)
     score = extended_tree_likeness(network, network_bmg, bmg_function, tree_likeness_function, mode="weak")
+    equal_score_steps = 0
+    edges_added = []
 
     for i in range(max_number_of_steps):
         print(f"simplifying step {i+1}/{max_number_of_steps}")
 
         #remove hybrid edges
-        network, valid = remove_hybrid_edge(network, network_bmg, bmg_function, mode)
-        if valid:
-            continue
+        # network, valid = remove_hybrid_edge(network, network_bmg, bmg_function, mode)
+        # if valid:
+        #     equal_score_steps = 0
+        #     continue
 
         #pull up action
-        network, score, valid = try_pulling_up(network, score, network_bmg, bmg_function, tree_likeness_function, mode)
+        network, score, valid = try_pulling_up(network, score, network_bmg, allow_equal_score=False)
         if valid:
+            equal_score_steps = 0
             continue
 
         #pull down action
-        network, score, valid = try_pulling_down(network, score, network_bmg, bmg_function, tree_likeness_function, mode)
+        network, score, valid = try_pulling_down(network, score, network_bmg, allow_equal_score=False)
+        if valid:
+            equal_score_steps = 0
+            continue
+
+        #try combining cherries
+        network, valid = create_cherry(network, network_bmg)
         if valid:
             continue
 
-        network, valid = add_cherry_edge(network, network_bmg)
+        network, score, valid = try_pulling_up(network, score, network_bmg, allow_equal_score=True)
+        network, score, valid = try_pulling_down(network, score, network_bmg, allow_equal_score=True)
+        equal_score_steps += 1
 
-        if not valid:
+        if equal_score_steps > 10:
             print("No further improvements found")
             return network
 
