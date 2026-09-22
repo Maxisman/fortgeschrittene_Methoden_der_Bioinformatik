@@ -55,20 +55,81 @@ def BICcherryRestrict(G: nx.DiGraph) -> nx.DiGraph:
     for pair, p_name in p_nodes.items():
         x,y = sorted(pair)
         if not G.has_edge(x,y):
-            y_prime = rng.choice([v for v in G.successors(x) if colors[v]==colors[y]])
+
+            # statt random choice, sollte hier der successor gewählt werden, der widerum x als best match hat, sofern vorhanden
+
+            # Alte Auswahl:
+            # y_prime = rng.choice([v for v in G.successors(x) if colors[v]==colors[y]])
+
+            # neue Auswahl:
+            # 1. reziproger best match (x->z & z->x)
+            # 2. asymmetrischer best match (x->z)
+            # 3. asymmetrischer best match (z->x)
+            # 4. irgendein y' != y
+            candidates = []
+            candidates = [v for v in G.successors(x) if colors[v] == colors[y] and G.has_edge(v,x)]
+
+            if not candidates:
+                candidates = [v for v in G.successors(x) if colors[v] == colors[y]]
+
+            if not candidates:
+                candidates = [v for v in G.predecessors(x) if colors[v] == colors[y] and v != y]
+
+            if not candidates:
+                candidates = [v for v in G.nodes if colors[v] == colors[y] and v != y]
+
+            y_prime = rng.choice(candidates)
+
+
             ## insert q_xy' below p_xy
             q_name = f"q_{x}_{y}_{y_prime}"
             N.add_edge(p_name,q_name)
             N.add_edge(q_name, x)
             N.add_edge(q_name, y_prime)
+
+            # soll man die Edge zwischen p_name und x löschen? diese ist shortcut
+
+            N.remove_edge(p_name,x)
+
         if not G.has_edge(y,x):
-            x_prime = rng.choice([v for v in G.successors(y) if colors[v]==colors[x]])
+            
+            # statt random choice, sollte hier der successor gewählt werden, der widerum x als best match hat
+
+            # Alte Auswahl
+            # x_prime = rng.choice([v for v in G.successors(y) if colors[v]==colors[x]])
+
+            # neue Auswahl:
+            # 1. reziproger best match (x->z & z->x)
+            # 2. asymmetrischer best match (x->z)
+            # 3. asymmetrischer best match (z->x)
+            # 4. irgendein y' != y
+
+
+            candidates = []
+            candidates = [v for v in G.successors(y) if colors[v] == colors[x] and G.has_edge(v,y)]
+
+            if not candidates:
+                candidates = [v for v in G.successors(y) if colors[v] == colors[x]]
+
+            if not candidates:
+                candidates = [v for v in G.predecessors(y) if colors[v] == colors[x] and v != x]
+
+            if not candidates:
+                candidates = [v for v in G.nodes if colors[v] == colors[x] and v != x]
+
+            x_prime = rng.choice(candidates)
+
+
             ## insert q_yx'' below p_xy
             q_name = f"q_{y}_{x}_{x_prime}"
             N.add_edge(p_name, q_name)
             N.add_edge(q_name, y)
             N.add_edge(q_name, x_prime)
 
+            # soll man die Edge zwischen p_name und y löschen? diese ist shortcut
+
+            N.remove_edge(p_name,y)
+                          
     # return network
     return N
 
