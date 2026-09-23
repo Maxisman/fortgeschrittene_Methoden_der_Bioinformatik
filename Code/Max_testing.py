@@ -73,7 +73,7 @@ def generate_tree(seed = 3):
 
     # species tree
     S = te.species_tree_n_age(
-        3, 0.55, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
+        3, 0.59, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
     )
     # gene tree
     T = te.dated_gene_tree(
@@ -91,12 +91,14 @@ def generate_tree(seed = 3):
 
     return tree_to_nx, gene_colors_str
 
-G, colors = generate_tree(3)
+for seed in range(50):
+    G, colors = generate_tree(seed)
+    bic_cherry = BICcherry.BICcherry(bmg(G, mode="weak"))
 
-from bmg_Tony import bmg
-bic_cherry = BICcherry.BICcherry(bmg(G, mode="weak"))
-original_bic = deepcopy(bic_cherry)
-
-#display_multiple_trees([G, bic_cherry] + beam_search(bic_cherry, max_number_of_steps=10, top_n=5))
-#display_multiple_trees([G, original_bic] + [greedy_search(bic_cherry, max_number_of_steps=500)], colors)
-display_multiple_trees([G, original_bic], colors)
+    if nx.utils.graphs_equal(bmg(G), bmg(bic_cherry)):
+        original_bic = deepcopy(bic_cherry)
+        improved_network = greedy_search(bic_cherry, max_number_of_steps=50)
+        assert(nx.utils.graphs_equal(bmg(original_bic), bmg(improved_network)))
+        display_multiple_trees([G, original_bic, improved_network], colors)
+        print(seed)
+    

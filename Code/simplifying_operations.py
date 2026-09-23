@@ -172,6 +172,32 @@ def remove_hybrid_edge(network, network_bmg, bmg_function, mode):
                 network.add_edge(parent, child)
     return network, False
 
+def contract_edge(network, score, network_bmg):
+    nodes = list(network.nodes)
+    random.shuffle(nodes)
+    for parent in nodes:
+        children = list(network.successors(parent))
+        for child in children:
+            if network.out_degree(child) == 0:
+                continue
+
+            grandchildren = list(network.successors(child))
+            for grandchild in grandchildren:
+                network.add_edge(parent, grandchild)
+            network.remove_node(child)
+            newscore = compute_tree_likeness(network)
+
+            if newscore > score:
+                if nx.utils.graphs_equal(bmg(network), network_bmg):
+                    return network, newscore, True
+                
+            network.add_node(child)
+            for grandchild in grandchildren:
+                network.add_edge(child, grandchild)
+                network.remove_edge(parent, grandchild)
+            network.add_edge(parent, child)
+    return network, score, False
+
 def try_pulling_up(network, score, network_bmg, allow_equal_score):
     nodes = list(network.nodes)
     random.shuffle(nodes)
@@ -270,6 +296,12 @@ def greedy_search(network: nx.DiGraph,
         # if valid:
         #     equal_score_steps = 0
         #     continue
+
+        #contracting edges action
+        network, score, valid = contract_edge(network, score, network_bmg)
+        if valid:
+            equal_score_steps = 0
+            continue
 
         #pull up action
         network, score, valid = try_pulling_up(network, score, network_bmg, allow_equal_score=False)
