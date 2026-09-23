@@ -1,0 +1,14 @@
+- Auswahlkriterien für insert_hybrid
+	- Ansatz, wie sichergestellt wird, dass keine Cyclen entstehen
+- Ausarbeitung der Funktion bmg
+	- Mit Suche über die Menge aller LCAS von x zu anderer Farbe
+- Auswahl von y' bzw. z im BCEA
+	- Bei Trees ist die Auswahl egal.
+	- Bei Netzwerken muss unterschieden werden!
+	- Unterschied zwischen weak und strong!
+		- bei weak: y' bevorzugt, wenn x = bm(y') und y' = bm(x)
+		- bei strong: y' bevorzugt genauso aber zusätzlich: Keine Brücke über 2 Q-Knoten erzeugen, die zwei Blätter verbinden, die keine best matches zueinander sind.
+- Break von BCEA bei weak und strong
+	- Verbesserung BCEA mit weiteren Layern (für weak)
+	- Verbesserung für strong?
+-  

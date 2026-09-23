@@ -1,56 +1,5 @@
 import networkx as nx
-import matplotlib.colors as mcolors
-
-def compute_bmg(T, sigma):
-    """
-    T:     a nx.DiGraph representing a rooted tree or network (edges parent→child)
-    sigma: dict mapping each leaf to its color
-
-    Returns: a nx.DiGraph representing the (weak) BMG
-    """
-
-    # Normalize sigma values to be hashable (convert arrays to tuples)
-    sigma = {k: str(v)
-             for k, v in sigma.items()}
-
-    leaves = list(sigma.keys())
-    all_colors = set(sigma.values())
-    BMG = nx.DiGraph()
-
-    # first, add all leaves to the BMG
-    for node, color in sigma.items():
-        # BMG.add_node(node, color=color)   # Alte Erstellung der Nodes
-
-        # Änderung von Tony, um die Graphen vergleichbar zu machen, neu geändert zu color!:
-        BMG.add_node(node, reconc = T.nodes[node]["color"], label = node)
-
-    # second, add edges to nodes for best matches
-    # loop through all leaves
-    for leaf in leaves:
-        remaining = all_colors - {sigma[leaf]}  # colors to which no best match has yet been found
-        # access immediate predecessors
-        parents = list(T.predecessors(leaf))
-
-        # as long as parent(s) and colors still exist
-        while remaining and parents:
-            next_parents = []
-            for parent in parents:
-                # find all leaf descendants of this parent
-                candidates = {n for n in nx.descendants(T, parent) if n in set(leaves)}
-                # remove current leaf from candidates
-                candidates -= {leaf}
-                colors_here = set()
-                # loop through candidates
-                for candidate in candidates:
-                    if sigma[candidate] in remaining:  # best match found
-                        colors_here.add(sigma[candidate])
-                        BMG.add_edge(leaf, candidate)
-                next_parents.extend(T.predecessors(parent))
-            # remove all used up colors from remaining
-            remaining -= colors_here
-            parents = next_parents
-
-    return BMG
+import numpy as np
 
 def convert_to_nx(T) -> nx.DiGraph:
     """
@@ -79,3 +28,70 @@ def convert_to_nx(T) -> nx.DiGraph:
         graph.nodes[str(v.label)]["sibling_nr"] = sibling_nr
 
     return graph
+
+
+# --------------------------------------------------------------------------------------------------
+#                                       Thinness classes for BMG
+# --------------------------------------------------------------------------------------------------
+
+
+import networkx as nx
+
+
+def thinness_graph(G: nx.DiGraph, color_dict: dict | None = None):
+    """Collapse the thinness classes of a colored digraph.
+
+    Nodes with the same color, the same predecessors and the same successors
+    are merged into one node. Singleton classes keep their original name;
+    larger classes are named by their sorted member names joined with "-".
+    The input graph is not modified. Nodes of the result carry only the
+    'color' attribute, and edges carry no attributes.
+
+    Args:
+        G: A digraph whose nodes have the 'color' attribute.
+        color_dict: Optional dict mapping every node of G to a color.
+
+    Returns:
+        The collapsed graph H if color_dict is None, otherwise a tuple
+        (H, new_color_dict), where new_color_dict maps each class name to
+        the color its members have in color_dict.
+    """
+    # 1) Group nodes by their signature (color, in-neighbors, out-neighbors).
+    classes = {}
+    for v in G.nodes:
+        key = (
+            G.nodes[v]["color"],
+            frozenset(G.predecessors(v)),
+            frozenset(G.successors(v)),
+        )
+        classes.setdefault(key, []).append(v)
+
+    # 2) Create one node per class (local lookup only, not returned).
+    H = nx.DiGraph()
+    class_of = {}
+    new_color_dict = {} if color_dict is not None else None
+    for (color, _, _), members in classes.items():
+        name = "-".join(sorted(members))
+        H.add_node(name, color=color)
+        for v in members:
+            class_of[v] = name
+
+        if color_dict is not None:
+            first = color_dict[members[0]]
+            for v in members[1:]:
+                if not np.array_equal(color_dict[v], first):
+                    raise ValueError(
+                        f"members of class '{name}' have different colors in color_dict"
+                    )
+            new_color_dict[name] = first
+
+    # Guard against name collisions, e.g. an original node already named "a1-a2".
+    if H.number_of_nodes() != len(classes):
+        raise ValueError("class names collide; check for '-' in node names")
+
+    # 3) Map every original edge onto its classes; duplicates collapse automatically.
+    H.add_edges_from((class_of[u], class_of[v]) for u, v in G.edges)
+
+    if color_dict is None:
+        return H
+    return H, new_color_dict
