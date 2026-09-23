@@ -1,7 +1,0 @@
-- Auswahlkriterien für insert_hybrid
-- Ausarbeitung der Funktion bmg
-	- Mit Suche über die Menge aller LCAS von x zu anderer Farbe
-- Auswahl von y' bzw. z im BCEA
-- Break von BCEA bei weak und strong
-	- Verbesserung BCEA mit weiteren Layern
--  
