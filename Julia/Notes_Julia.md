@@ -122,3 +122,8 @@ Solved the problem!!!
 The issue was how colors were represented using matplotlib (the colors in the graphs were just printed wrongly).
 It's important to use this when printing the graphs: `node_color=[color] * len(node_list)`
 ![[BMG_finalized.png]]
+
+# ToDos
+- mathematical equation for difference between best match graph definitions (formal)
+- translate lrt from asymetree to network x
+-  create function to reduce bmg based on thinness classes (same edges in both directions)
