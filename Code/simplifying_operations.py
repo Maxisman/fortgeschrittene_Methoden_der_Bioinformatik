@@ -210,31 +210,6 @@ def try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mo
                             return workingcopy, workingcopy_score, True
     return network, score, False
 
-def create_cherry(network, network_bmg):
-    for node in network.nodes:
-        if network.out_degree(node) != 0:
-            continue
-        node_predecessors = set(network.predecessors(node))
-        for target in network.nodes:
-            target_predecessors = set(network.predecessors(target))
-            if network.out_degree(target) != 0 or bool(node_predecessors & target_predecessors):
-                continue
-            if network.nodes[target]["color"] != network.nodes[node]["color"]:
-                continue
-            for parent in target_predecessors:
-                network.add_edge(parent, node)
-            for parent in node_predecessors:
-                network.remove_edge(parent, node)
-            if not nx.utils.graphs_equal(network_bmg, bmg(network)):
-                for parent in target_predecessors:
-                    network.remove_edge(parent, node)
-                for parent in node_predecessors:
-                    network.add_edge(parent, node)
-            else:
-                print(f"added cherry edge {target_predecessors} - {node}")
-                return network, True
-    return network, False
-
 def greedy_search(network: nx.DiGraph,
                   max_number_of_steps:int = 100,
                   tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness,
@@ -265,12 +240,6 @@ def greedy_search(network: nx.DiGraph,
     for i in range(max_number_of_steps):
         print(f"simplifying step {i+1}/{max_number_of_steps}")
 
-        #remove hybrid edges
-        # network, valid = remove_hybrid_edge(network, network_bmg, bmg_function, mode)
-        # if valid:
-        #     equal_score_steps = 0
-        #     continue
-
         #contracting edges action
         network, score, valid = contract_edge(network, score, network_bmg, tree_likeness_function, bmg_mode)
         if valid:
@@ -288,11 +257,6 @@ def greedy_search(network: nx.DiGraph,
         if valid:
             equal_score_steps = 0
             continue
-
-        #try combining cherries
-        # network, valid = create_cherry(network, network_bmg)
-        # if valid:
-        #     continue
 
         network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
         network, score, valid = try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
