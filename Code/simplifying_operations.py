@@ -1,9 +1,10 @@
-from network_editing_operations import * #TODO: remove eventually
-from copy import deepcopy #TODO: remove eventually
 import networkx as nx
 from _collections_abc import Callable
+import random
 from bmg_Tony import bmg
 from graph_functionality import compute_tree_likeness
+from network_editing_operations import remove_non_informative_nodes, remove_redundant_vertices
+
 
 """
     This script provides methods to simplify a graph network
@@ -189,25 +190,29 @@ def try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mo
     for parent in nodes:
         if network.out_degree(parent) <= 1:
             continue
-        for child in network.successors(parent):
-            for new_parent in network.successors(parent):
+        parent_successors = list(network.successors(parent))
+        for child in parent_successors:
+            for new_parent in parent_successors:
                 if child == new_parent:
                     continue
+                if network.out_degree(new_parent) == 0: # in this case pulling down would not make sense as it would remove a leaf #TODO: Is this right?
+                    continue
 
-                workingcopy = deepcopy(network) #TODO: remove need for deepcopy
-                pull_down(workingcopy, child, parent, new_parent)
-                remove_non_informative_nodes(workingcopy)
-                remove_redundant_vertices(workingcopy)
+                network.remove_edge(parent, child)
+                network.add_edge(new_parent, child)
 
-                workingcopy_score = tree_likeness_function(workingcopy)
+                new_score = tree_likeness_function(network)
                 if allow_equal_score:
-                    if workingcopy_score >= score:
-                        if nx.utils.graphs_equal(bmg(workingcopy, bmg_mode), network_bmg):
-                            return workingcopy, workingcopy_score, True
+                    if new_score >= score:
+                        if nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
+                            return network, new_score, True
                 else:
-                    if workingcopy_score > score:
-                        if nx.utils.graphs_equal(bmg(workingcopy, bmg_mode), network_bmg):
-                            return workingcopy, workingcopy_score, True
+                    if new_score > score:
+                        if nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
+                            return network, new_score, True
+                        
+                network.add_edge(parent, child)
+                network.remove_edge(new_parent, child)
     return network, score, False
 
 def greedy_search(network: nx.DiGraph,
