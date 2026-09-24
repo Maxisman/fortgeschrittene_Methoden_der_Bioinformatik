@@ -1,6 +1,6 @@
 import networkx as nx
-from graph_functionality import lists_equal
 import random
+from graph_functionality import lists_equal
 
 """
     This script provides a collection of graph editing operations

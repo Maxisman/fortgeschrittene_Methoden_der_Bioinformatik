@@ -17,16 +17,7 @@ def compute_tree_likeness(G):
 
     The idea behind that is that an ideal tree has as few edges as possible (especially no hybrid edges). However each node has at least two edges so we do not want to discourage creating more nodes (for now)
     """
-    return -( len(G.edges()) - 0 * len(G.nodes())) #2 we need to see which scalar should value many nodes. Too many nodes are just making the graph more complicated unneccessarily
-
-def extended_tree_likeness(G, bmg, bmg_function=bmg, tree_likeness_function=compute_tree_likeness, NEGATIVE_INFINITY = -1000000, mode="weak"):
-    """
-    Returns a score of tree likeness or NEGATIVE_INFINITY if the network's bmg is wrong
-    """
-    if not nx.utils.graphs_equal(bmg, bmg_function(G, mode)):
-        return (NEGATIVE_INFINITY)
-    else:
-        return (tree_likeness_function(G))
+    return -len(G.edges())
 
 def color_dict_to_sequence(G:nx.digraph, node_to_color_dict:dict):
     if node_to_color_dict == None:
@@ -39,7 +30,7 @@ def color_dict_to_sequence(G:nx.digraph, node_to_color_dict:dict):
             sequence.append([0.5, 0.5, 0.5, 1.])
     return sequence
 
-def display_multiple_trees(graphs: list, node_to_color_dict = None):
+def display_multiple_trees(graphs: list, node_to_color_dict = None, tree_likeness_function = compute_tree_likeness):
     fig, axes = plt.subplots(2, max(len(graphs), 2), figsize=(4 * len(graphs), 10))
     bmg_pos = nx.circular_layout(bmg(graphs[0], "weak"))
     for i, G in enumerate(graphs):
@@ -54,7 +45,7 @@ def display_multiple_trees(graphs: list, node_to_color_dict = None):
         nx.draw(gbmg, bmg_pos, node_color= node_color, ax=axes[1,i], with_labels=True)
 
         #tree likeness score
-        tree_likeness = extended_tree_likeness(G,gbmg)
+        tree_likeness = tree_likeness_function(G)
         bbox = axes[1, i].get_position()
         x_center = (bbox.x0 + bbox.x1) / 2
         fig.text(x_center, bbox.y0 - 0.03, round(tree_likeness, 5), ha="center", fontsize=12)
