@@ -2,8 +2,12 @@
 	- Ansatz, wie sichergestellt wird, dass keine Cyclen entstehen
 - Ausarbeitung der Funktion bmg
 	- Mit Suche über die Menge aller LCAS von x zu anderer Farbe
+- Bei Bäumen ist der bmg immer gleich, egal ob man die weak oder strong definition wählt. (Test??)
+- wenn man allerdings den BCEA von einem Tree-BMG baut, ist es wichtig, dass man die strong definition wählt, da durch die weak-definitionen unnötige best matches "entstehen"
+	- Also sollte man bei Bäumen immer im strong mode bleiben
+- 
 - Auswahl von y' bzw. z im BCEA
-	- Bei Trees ist die Auswahl egal.
+	- Bei Trees ist die Auswahl egal (im Strong mode, bei weak definition nicht.)
 	- Bei Netzwerken muss unterschieden werden!
 	- Unterschied zwischen weak und strong!
 		- bei weak: y' bevorzugt, wenn x = bm(y') und y' = bm(x)

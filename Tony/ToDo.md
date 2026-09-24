@@ -16,3 +16,4 @@
 	- [ ] Kandidatenwahl als Hilfsfunktion? -> bessere Lesbarkeit
 	- [ ] BIC-Cherry explizit für strong definition
 - [ ] ewig langen loop bauen um strong bmg auf trees zu testen
+- [ ] sollte man eine Abfrage einbauen, um zu testen ob es einen erklärenden Baum des BMGs gibt(über explaining triples?)
