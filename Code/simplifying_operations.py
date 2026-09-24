@@ -1,157 +1,34 @@
-from network_editing_operations import *
-from graph_functionality import compute_tree_likeness, extended_tree_likeness
-from graph_functionality import display_multiple_trees
-from bmg_Tony import bmg
+from network_editing_operations import * #TODO: remove eventually
+from copy import deepcopy #TODO: remove eventually
 import networkx as nx
-from copy import deepcopy
 from _collections_abc import Callable
-import itertools
-import heapq
+from bmg_Tony import bmg
+from graph_functionality import compute_tree_likeness
 
 """
     This script provides methods to simplify a graph network
 """
 
-### BEAM SEARCH
-
-def generate_editing_neighborhood(G: nx.DiGraph):
-    """ Generates neighborhood of graphs that can be achieved by one graph edit operation. In each tree redundant and non-informative nodes will be removed.
-
-    Parameters
-    ----------
-    G: nx.Digraph
-        Graph that should be edited
-
-    Returns
-    -------
-    neighborhood: list(nx.DiGraph)
-        list of graphs that can be reached from G in one edit operation
-    """
-
-    # by default remove redundant vertices beforehand (might be changed later)
-    remove_non_informative_nodes(G)
-    remove_redundant_vertices(G)
-    neighborhood = []
-
-    # pull up moves
-    pull_up_candidates = []
-    for grandparent in G.nodes:
-        parents = G.successors(grandparent)
-        for parent in parents:
-            children = G.successors(parent)
-            pull_up_candidates += [(grandparent, parent, child) for child in children]
+def remove_hybrid_edge(network, network_bmg, bmg_mode):
+    """ DEPRECATED Removes the first hybrid edge from a graph that can be removed while keeping the best match graph unchanged. Note that we do not consider the tree likeness score here as it is assumed that getting rid of hybrid edges always improves tree likeness.
     
-    for (grandparent, parent, child) in pull_up_candidates:
-        H = deepcopy(G)
-        pull_up(H, child, parent, grandparent)
-        neighborhood.append(H)
-
-    # pull down moves
-    pull_down_candidates = []
-    for parent in G.nodes:
-        if G.out_degree(parent) <= 1:
-            continue
-        pull_down_candidates += [(c1, parent, c2) for c1, c2 in itertools.permutations(G.successors(parent), 2)]
-
-    for (child, parent, new_parent) in pull_down_candidates:
-        H = deepcopy(G)
-        pull_down(H, child, parent, new_parent)
-        neighborhood.append(H)
-
-    for G in neighborhood:
-        remove_non_informative_nodes(G)
-
-    return neighborhood
-
-def remove_equal_graphs(neighborhood: list[nx.DiGraph]):
-    """
-    Removes all duplicate graphs from a list of graphs. This only works if duplicates have the same node labelings.
-
-    This limits the number of graphs that need to be examined and facilitates beam search
-    """
-    removal = []
-    for G in neighborhood:
-        if G in removal:
-            continue
-        for H in neighborhood:
-            if H == G:
-                continue
-            if nx.utils.graphs_equal(G, H):
-                removal.append(H)
+        Parameters
+        ----------
+        network: nx.Digraph
+            Graph from which a hybrid edge should be removed
+        network_bmg: nx.DiGraph
+            best match graph of network that should be kept intact
+        bmg_mode: String
+            "weak" or "strong", type of best matches that should be assessed
     
-    for G in removal:
-        neighborhood.remove(G)
-
-    return neighborhood
-
-def beam_search_step(networks:list[nx.DiGraph], 
-                     bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, 
-                     top_n:int = 10, 
-                     step_size:int = 1, 
-                     tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness, 
-                     mode:str="weak"):
-    """
-    Tries to make a set of networks more tree-like while conserving the network's best match graph. This is achieved by calculating the neighborhood of a graph for up to step_size steps and then taking the top n graphs according to the tree likeness.
-
-    Parameters
-    ----------
-    graphs: list[networkx.DiGraph]
-        number of graphs that will be used as a base for improvement
-    coloring:dict
-        leaf coloring neccessary for bmg function
-    bmg_function: function
-        function for calculating a best match graph from a network
-    top_n: int
-        number of graphs with the best scores that will be returned
-    step_size: int
-        maximum number of editing operations before the bmg and loss will be evaluated. Higher step size allows better operations but decreases performance exponentially.
-    loss_function: function
-        calculates the loss for tree likeness of a network. Higher values mean more tree-like
-    mode: str
-        either strong or weak, selects best match definition
+        Returns
+        -------
+        network: nx.DiGraph
+            network with a hybrid edge removed or the same network if no such removal is possible
+        valid: bool
+            True if a hybrid was successfully removed and False if this was not possible
     """
 
-    NEGATIVE_INFINITY = -1000000
-    bmg = bmg_function(networks[0], mode)
-
-    for step in range(step_size):
-        neighborhood = []
-        for G in networks:
-            neighborhood = neighborhood + generate_editing_neighborhood(G)
-        networks = networks + neighborhood
-        remove_equal_graphs(networks) #TODO: make that more efficient
-        print(f"Finished step {step + 1}/{step_size}")
-
-
-    scored_graphs = [(extended_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY, mode), G) for G in networks]
-    valid_graphs = [(score, G) for score, G in scored_graphs if score > NEGATIVE_INFINITY]
-    top_graphs = heapq.nlargest(top_n, valid_graphs, key = lambda x : x[0])
-
-    return [G for score, G in top_graphs]
-
-    #new_batch = heapq.nlargest(top_n, graphs, key= (lambda G : helper_tree_likeness(G, bmg, bmg_function, tree_likeness_function, NEGATIVE_INFINITY)))
-
-def beam_search(network:nx.DiGraph,
-                max_number_of_steps:int = 100,
-                bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg, 
-                top_n:int = 10,
-                step_size:int = 1, 
-                tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness, 
-                mode:str="weak"):
-
-    """
-        Simplifies a network while keeping its bmg constant through a series of beam search steps. The top n networks get chosen to advance to the next step.
-    """
-
-    networks = [network]
-    for _ in range(max_number_of_steps):
-        networks = beam_search_step(networks, bmg_function, top_n, step_size, tree_likeness_function, mode)
-    return(networks)
-
-### GREEDY SEARCH
-
-# When we can remove an edge while keeping the bmg this automatically improves the score so we do not need to check it explicitly
-def remove_hybrid_edge(network, network_bmg, bmg_function, mode):
     nodes = list(network.nodes)
     random.shuffle(nodes)
     for child in nodes:
@@ -164,15 +41,39 @@ def remove_hybrid_edge(network, network_bmg, bmg_function, mode):
             if network.out_degree(parent) <= 1:
                 continue
             network.remove_edge(parent, child)
-            new_bmg = bmg_function(network, mode)
 
-            if nx.utils.graphs_equal(network_bmg, new_bmg):
+            if nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
                 return network, True
             else:
                 network.add_edge(parent, child)
     return network, False
 
-def contract_edge(network, score, network_bmg):
+def contract_edge(network, score, network_bmg, tree_likeness_function, bmg_mode):
+    """ Contracts a random edge in the network keeping the bmg intact if this is possible. A contraction takes an edge (u->v), attaches v's children to u and deletes v
+    
+        Parameters
+        ----------
+        network: nx.Digraph
+            Graph from which an edge should be contracted
+        score:
+            tree_likeness score of the original network
+        network_bmg: nx.DiGraph
+            best match graph of network that should be kept intact
+        tree_likeness_function:
+            function used to evaluate tree likeness
+        bmg_mode: String
+            "weak" or "strong", type of best matches that should be assessed
+    
+        Returns
+        -------
+        network: nx.DiGraph
+            network with an edge contracted or the same network if no such contraction is possible
+        score: int
+            new tree likeness score of the network
+        valid: bool
+            True if an edge was successfully contracted and False if this was not possible
+    """
+
     nodes = list(network.nodes)
     random.shuffle(nodes)
     for parent in nodes:
@@ -185,10 +86,10 @@ def contract_edge(network, score, network_bmg):
             for grandchild in grandchildren:
                 network.add_edge(parent, grandchild)
             network.remove_node(child)
-            newscore = compute_tree_likeness(network)
+            newscore = tree_likeness_function(network)
 
             if newscore > score:
-                if nx.utils.graphs_equal(bmg(network), network_bmg):
+                if nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
                     return network, newscore, True
                 
             network.add_node(child)
@@ -198,7 +99,33 @@ def contract_edge(network, score, network_bmg):
             network.add_edge(parent, child)
     return network, score, False
 
-def try_pulling_up(network, score, network_bmg, allow_equal_score):
+def try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score):
+    """ Uses the "pull up" operation on a random set of nodes if this is possible while keeping the network's bmg intact
+    
+        Parameters
+        ----------
+        network: nx.Digraph
+            Graph on which a "pull up" action should be performed
+        score:
+            tree_likeness score of the original network
+        network_bmg: nx.DiGraph
+            best match graph of network that should be kept intact
+        tree_likeness_function:
+            function used to evaluate tree likeness
+        bmg_mode: String
+            "weak" or "strong", type of best matches that should be assessed
+        allow_equal_score: bool
+            switch whether changes that keep the score the same should be accepted
+    
+        Returns
+        -------
+        network: nx.DiGraph
+            network with a completed "pull up" operation or the same network if no such operation is possible
+        score: int
+            new tree likeness score of the network
+        valid: bool
+            True if any "pull up" operation was successful and False if none was possible
+    """
     nodes = list(network.nodes)
     random.shuffle(nodes)
     for grandparent in nodes:
@@ -211,24 +138,52 @@ def try_pulling_up(network, score, network_bmg, allow_equal_score):
                 network.remove_edge(parent, child)
                 network.add_edge(grandparent, child)
 
-                new_score = extended_tree_likeness(network, network_bmg, bmg_function=bmg, tree_likeness_function=compute_tree_likeness, mode= "weak")
+                new_score = tree_likeness_function(network)
                 if allow_equal_score:
                     if new_score >= score:
-                        remove_non_informative_nodes(network)
-                        remove_redundant_vertices(network)
-                        return network, new_score, True
+                        if(nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg)):
+                            remove_non_informative_nodes(network)
+                            remove_redundant_vertices(network)
+                            return network, new_score, True
                 else:
                     if new_score > score:
-                        remove_non_informative_nodes(network)
-                        remove_redundant_vertices(network)
-                        return network, new_score, True
+                        if(nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg)):
+                            remove_non_informative_nodes(network)
+                            remove_redundant_vertices(network)
+                            return network, new_score, True
                     
                 network.remove_edge(grandparent, child)
                 network.add_edge(parent, child)
 
     return network, score, False
 
-def try_pulling_down(network, score, network_bmg, allow_equal_score):
+def try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score):
+    """ Uses the "pull down" operation on a random set of nodes if this is possible while keeping the network's bmg intact
+    
+        Parameters
+        ----------
+        network: nx.Digraph
+            Graph on which a "pull down" action should be performed
+        score:
+            tree_likeness score of the original network
+        network_bmg: nx.DiGraph
+            best match graph of network that should be kept intact
+        tree_likeness_function:
+            function used to evaluate tree likeness
+        bmg_mode: String
+            "weak" or "strong", type of best matches that should be assessed
+        allow_equal_score: bool
+            switch whether changes that keep the score the same should be accepted
+    
+        Returns
+        -------
+        network: nx.DiGraph
+            network with a completed "pull down" operation or the same network if no such operation is possible
+        score: int
+            new tree likeness score of the network
+        valid: bool
+            True if any "pull down" operation was successful and False if none was possible
+    """
     nodes = list(network.nodes)
     random.shuffle(nodes)
     for parent in nodes:
@@ -239,18 +194,20 @@ def try_pulling_down(network, score, network_bmg, allow_equal_score):
                 if child == new_parent:
                     continue
 
-                workingcopy = deepcopy(network)
+                workingcopy = deepcopy(network) #TODO: remove need for deepcopy
                 pull_down(workingcopy, child, parent, new_parent)
                 remove_non_informative_nodes(workingcopy)
                 remove_redundant_vertices(workingcopy)
 
-                workingcopy_score = extended_tree_likeness(workingcopy, network_bmg, bmg_function=bmg, tree_likeness_function=compute_tree_likeness, mode= "weak")
+                workingcopy_score = tree_likeness_function(workingcopy)
                 if allow_equal_score:
                     if workingcopy_score >= score:
-                        return workingcopy, workingcopy_score, True
+                        if nx.utils.graphs_equal(bmg(workingcopy, bmg_mode), network_bmg):
+                            return workingcopy, workingcopy_score, True
                 else:
                     if workingcopy_score > score:
-                        return workingcopy, workingcopy_score, True
+                        if nx.utils.graphs_equal(bmg(workingcopy, bmg_mode), network_bmg):
+                            return workingcopy, workingcopy_score, True
     return network, score, False
 
 def create_cherry(network, network_bmg):
@@ -280,13 +237,30 @@ def create_cherry(network, network_bmg):
 
 def greedy_search(network: nx.DiGraph,
                   max_number_of_steps:int = 100,
-                  bmg_function:Callable[[nx.DiGraph, str], nx.DiGraph] = bmg,
                   tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness,
-                  mode:str="weak"):
-    network_bmg = bmg_function(network, mode)
-    score = extended_tree_likeness(network, network_bmg, bmg_function, tree_likeness_function, mode="weak")
+                  bmg_mode:str="weak"):
+    """ Greedily searches for graph editing operations that can be performed on a network to make it more tree-like according to the tree_likeness_function.
+
+        Parameters
+        ----------
+        network: nx.DiGraph
+            network that will be edited to be more tree-like
+        max_number_of_steps: int
+            maximum number of editing steps before the final network is returned
+        tree_likeness_function: Callable[[nx.DiGraph], int]
+            function that measures the tree-likeness of a network numerically
+        bmg_mode: String
+            "weak" or "strong" depending on the best match type
+
+        Returns
+        -------
+        network: nx.DiGraph
+            more tree like version of the network with the same best match graph
+
+    """
+    network_bmg = bmg(network, bmg_mode)
+    score = tree_likeness_function(network)
     equal_score_steps = 0
-    edges_added = []
 
     for i in range(max_number_of_steps):
         print(f"simplifying step {i+1}/{max_number_of_steps}")
@@ -298,30 +272,30 @@ def greedy_search(network: nx.DiGraph,
         #     continue
 
         #contracting edges action
-        network, score, valid = contract_edge(network, score, network_bmg)
+        network, score, valid = contract_edge(network, score, network_bmg, tree_likeness_function, bmg_mode)
         if valid:
             equal_score_steps = 0
             continue
 
         #pull up action
-        network, score, valid = try_pulling_up(network, score, network_bmg, allow_equal_score=False)
+        network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=False)
         if valid:
             equal_score_steps = 0
             continue
 
         #pull down action
-        network, score, valid = try_pulling_down(network, score, network_bmg, allow_equal_score=False)
+        network, score, valid = try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=False)
         if valid:
             equal_score_steps = 0
             continue
 
         #try combining cherries
-        network, valid = create_cherry(network, network_bmg)
-        if valid:
-            continue
+        # network, valid = create_cherry(network, network_bmg)
+        # if valid:
+        #     continue
 
-        network, score, valid = try_pulling_up(network, score, network_bmg, allow_equal_score=True)
-        network, score, valid = try_pulling_down(network, score, network_bmg, allow_equal_score=True)
+        network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
+        network, score, valid = try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
         equal_score_steps += 1
 
         if equal_score_steps > 10:
