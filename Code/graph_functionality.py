@@ -4,6 +4,9 @@ from networkx.drawing.nx_pydot import graphviz_layout
 from bmg_Tony import bmg
 
 def lists_equal(l1:list, l2:list):
+    """
+        checks whether two lists contain the same contents
+    """
     l1.sort()
     l2.sort()
     try:
@@ -19,7 +22,10 @@ def compute_tree_likeness(G):
     """
     return -len(G.edges())
 
-def color_dict_to_sequence(G:nx.digraph, node_to_color_dict:dict):
+def color_dict_to_sequence(G:nx.DiGraph, node_to_color_dict:dict):
+    """
+        Converts a color dictionary of a graph into a sequence of colors. Every node that has no attributed color will be given the color grey.
+    """
     if node_to_color_dict == None:
         return None
     sequence = []
@@ -30,7 +36,10 @@ def color_dict_to_sequence(G:nx.digraph, node_to_color_dict:dict):
             sequence.append([0.5, 0.5, 0.5, 1.])
     return sequence
 
-def display_multiple_trees(graphs: list, node_to_color_dict = None, tree_likeness_function = compute_tree_likeness):
+def display_multiple_graphs(graphs: list, node_to_color_dict = None, tree_likeness_function = compute_tree_likeness):
+    """
+        Given a list of (tree-like) colored graphs this function displays the graphs together with their best match graphs and their respective tree likeness scores 
+    """
     fig, axes = plt.subplots(2, max(len(graphs), 2), figsize=(4 * len(graphs), 10))
     bmg_pos = nx.circular_layout(bmg(graphs[0], "weak"))
     for i, G in enumerate(graphs):
