@@ -36,12 +36,11 @@ def color_dict_to_sequence(G:nx.DiGraph, node_to_color_dict:dict):
             sequence.append([0.5, 0.5, 0.5, 1.])
     return sequence
 
-def display_multiple_graphs(graphs: list, node_to_color_dict = None, tree_likeness_function = compute_tree_likeness):
+def display_multiple_graphs(graphs: list, node_to_color_dict = None, tree_likeness_function = compute_tree_likeness, bmg_type = "weak"):
     """
         Given a list of (tree-like) colored graphs this function displays the graphs together with their best match graphs and their respective tree likeness scores 
     """
     fig, axes = plt.subplots(2, max(len(graphs), 2), figsize=(4 * len(graphs), 10))
-    bmg_pos = nx.circular_layout(bmg(graphs[0], "weak"))
     for i, G in enumerate(graphs):
         #graph
         pos = graphviz_layout(G, prog="dot")
@@ -49,7 +48,8 @@ def display_multiple_graphs(graphs: list, node_to_color_dict = None, tree_likene
         nx.draw(G, pos, node_color= color_sequence, ax=axes[0,i], with_labels=True)
 
         #bmg
-        gbmg = bmg(G, "weak")
+        gbmg = bmg(G, bmg_type)
+        bmg_pos = nx.circular_layout(gbmg)
         node_color = color_dict_to_sequence(gbmg, node_to_color_dict)
         nx.draw(gbmg, bmg_pos, node_color= node_color, ax=axes[1,i], with_labels=True)
 

@@ -8,6 +8,8 @@ from copy import deepcopy
 import numpy as np
 import asymmetree.treeevolve as te
 from bmg_fun import convert_to_nx
+from EffRes import path_minus_resistance
+import bmg_fun
 
 
 def generate_tree(seed = 3):
@@ -36,12 +38,13 @@ def generate_tree(seed = 3):
 
 for seed in range(50):
     G, colors = generate_tree(seed)
-    bic_cherry = BICcherry.BICcherry(bmg(G, mode="weak"))
+    thin_BMG, thin_gene_colors = bmg_fun.thinness_graph(bmg(G, mode = "weak"), colors)
+    bic_cherry = BICcherry.BICcherry(thin_BMG)
 
-    if nx.utils.graphs_equal(bmg(G), bmg(bic_cherry)):
-        original_bic = deepcopy(bic_cherry)
-        improved_network = greedy_search(bic_cherry, max_number_of_steps=50, tree_likeness_function=compute_tree_likeness)
-        assert(nx.utils.graphs_equal(bmg(original_bic), bmg(improved_network)))
-        print(f"seed is {seed}")
-        display_multiple_graphs([G, original_bic, improved_network], colors)
+    #if nx.utils.graphs_equal(bmg(G), bmg(bic_cherry)):
+    original_bic = deepcopy(bic_cherry)
+    improved_network = greedy_search(bic_cherry, max_number_of_steps=50, tree_likeness_function = path_minus_resistance)
+    assert(nx.utils.graphs_equal(bmg(original_bic), bmg(improved_network)))
+    print(f"The seed is: {seed}")
+    display_multiple_graphs([G, original_bic, improved_network], thin_gene_colors | colors)
     

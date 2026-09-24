@@ -5,7 +5,6 @@ from bmg_Tony import bmg
 from graph_functionality import compute_tree_likeness
 from network_editing_operations import remove_non_informative_nodes, remove_redundant_vertices
 
-
 """
     This script provides methods to simplify a graph network
 """
