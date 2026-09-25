@@ -1,17 +1,10 @@
 import numpy as np
 import asymmetree.treeevolve as te
-import matplotlib.pyplot as plt
-import networkx as nx
 import random
-import copy
-import itertools
-
+import networkx as nx
+import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import graphviz_layout
-from asymmetree.visualization.tree_vis import assign_colors
-from insert_hybrid import insertHybrid
-from bmg_Tony import bmg, bmg_fast
-from BICcherryRestrict import BICcherryRestrict
-from bmg_fun import convert_to_nx
+import pydot
 
 def generateTree(seed:int = None, nSpecies:int = 2):
 
@@ -37,318 +30,166 @@ def generateTree(seed:int = None, nSpecies:int = 2):
     return speciesTree, geneTree
 
 
-def breakBMG(seed:int,nSpecies:int=2,mode:str = "weak"):
 
-    speciesTree, geneTree = generateTree(seed,nSpecies)
-
-    # get color dicts
-    species_colors, gene_colors = assign_colors(speciesTree, geneTree)
-
-    # convert to networkx
-    Tree = convert_to_nx(geneTree)
-
-    # Original BMG:
-    BMG = bmg(Tree)
-    BC = BICcherryRestrict(BMG)
-    BMGBC = bmg(BC)
-
-    # Testen, wie viele Hybride man einfügen kann, bevor die beiden BMGs nicht mehr übereinstimmen
-    random.seed(seed)
-    count = 0
-    Network = copy.deepcopy(Tree)
-    BMG = bmg(Tree)
-    BC = BICcherryRestrict(BMG)
-    BMGBC = bmg(BC)
-
-    while nx.utils.graphs_equal(BMG, BMGBC) and count < 1000:
-        Network = insertHybrid(Network)
-        BMG = bmg(Network, mode = mode)
-        BC = BICcherryRestrict(BMG)
-        BMGBC = bmg(BC, mode = mode)
-        count += 1
-        if count % 10 == 0:
-            print("Count = ",count)
-
-    print("Es konnten",count,"Hybride eingefügt werden, bevor die BMGs nicht mehr übereinstimmten")
-
-    # gene color dict turn keys to strings
-    gene_colors_str = {str(k): v for k, v in gene_colors.items()}
-
-    # visualize tree and network
-    fig, axes = plt.subplots(2, 2, figsize=(25, 20))
-
-    pos = graphviz_layout(Network, prog="dot")
-    nodes_list = [v for v in Network.nodes()]
-    nodes_colors = [gene_colors_str.get(v, "grey") for v in nodes_list]
-
-    nx.draw(Network, pos, nodelist=nodes_list, node_color= nodes_colors, with_labels = True, ax=axes[0,0])
-    axes[0,0].set_title("Network")
-
-    pos = graphviz_layout(BC, prog="dot")
-    nodes_list = [v for v in BC.nodes()]
-    nodes_colors = [gene_colors_str.get(v, "grey") for v in nodes_list]
-    nx.draw(BC, pos, nodelist=nodes_list, node_color= nodes_colors, with_labels = True, ax=axes[0,1])
-    axes[0,1].set_title("BC")
-
-
-    nodes_list = [v for v in BMG.nodes()]
-    nodes_colors = [gene_colors_str.get(v, "grey") for v in nodes_list]
-    axes[1,0].set_title("BMG")
-    nx.draw(BMG, nx.circular_layout(BMG), nodelist=nodes_list, node_color= nodes_colors, ax=axes[1,0], with_labels=True)
-
-
-    nodes_list = [v for v in BMGBC.nodes()]
-    nodes_colors = [gene_colors_str.get(v, "grey") for v in nodes_list]
-    axes[1,1].set_title("BMGBC")
-    nx.draw(BMGBC, nx.circular_layout(BMG), nodelist=nodes_list, node_color= nodes_colors, ax=axes[1,1], with_labels=True)
-
-
-def biccherry(G: nx.DiGraph):
-    BCN = nx.DiGraph()
-    BCN.add_node("rho")
-
-    for leaf in G.nodes():
-        BCN.add_node(leaf, color=G.nodes[leaf]["color"], label=leaf)
-
-    if len(G.nodes()) == 2:
-        for leaf in G.nodes():
-            BCN.add_edge("rho", leaf)
-        return BCN
-
-    cherryPs = {}
-    cherryQs = {}
-
-    for x, y in itertools.combinations(G.nodes(), 2):
-        if G.nodes[x]["color"] != G.nodes[y]["color"]:
-            p_name = f"p_{x}_{y}"
-            BCN.add_edge("rho", p_name)
-            BCN.add_edge(p_name, x)
-            BCN.add_edge(p_name, y)
-            cherryPs[(x, y)] = p_name
-
-    # Q-Extensions
-    for (x, y), p_name in cherryPs.items():
-
-        # --- Richtung x -> y ---
-        if not G.has_edge(x, y):
-            candidates = [
-                z
-                for z in G.successors(x)
-                if G.nodes[z]["color"] == G.nodes[y]["color"]
-            ]
-            if not candidates:
-                candidates = [
-                    z
-                    for z in G.predecessors(x)
-                    if G.nodes[z]["color"] == G.nodes[y]["color"] and z != y
-                ]
-            if not candidates:
-                candidates = [
-                    z
-                    for z in G.nodes()
-                    if G.nodes[z]["color"] == G.nodes[y]["color"] and z != y
-                ]
-
-            if candidates:
-
-                z = random.choice(candidates)
-                q_name = f"q_{x}_{z}"
-                BCN.add_edge(p_name, q_name)
-                BCN.add_edge(q_name, x)
-                BCN.add_edge(q_name, z)
-                cherryQs[(x, z)] = q_name
-
-        # --- Richtung y -> x ---
-        if not G.has_edge(y, x):
-            candidates = [
-                z
-                for z in G.successors(y)
-                if G.nodes[z]["color"] == G.nodes[x]["color"]
-            ]
-            if not candidates:
-                candidates = [
-                    z
-                    for z in G.predecessors(y)
-                    if G.nodes[z]["color"] == G.nodes[x]["color"] and z != x
-                ]
-            if not candidates:
-                candidates = [
-                    z
-                    for z in G.nodes()
-                    if G.nodes[z]["color"] == G.nodes[x]["color"] and z != x
-                ]
-
-            if candidates:
-
-                z = random.choice(candidates)
-                q_name = f"q_{y}_{z}"
-                BCN.add_edge(p_name, q_name)
-                BCN.add_edge(q_name, y)
-                BCN.add_edge(q_name, z)
-                cherryQs[(y, z)] = q_name
-
-    for (x, y), q_name in cherryQs.items():
+def visualize_bmg(BMG, ax = None):
+    sorted_nodes = sorted(BMG.nodes(), key=lambda n: (BMG.nodes[n].get('color', ''), n))
+    pos = nx.circular_layout(sorted_nodes)
     
-            # --- Richtung x -> y ---
-            if not G.has_edge(x, y):
-                candidates = [
-                    z
-                    for z in G.successors(x)
-                    if G.nodes[z]["color"] == G.nodes[y]["color"]
-                ]
-                if not candidates:
-                    candidates = [
-                        z
-                        for z in G.predecessors(x)
-                        if G.nodes[z]["color"] == G.nodes[y]["color"] and z != y
-                    ]
-                if not candidates:
-                    candidates = [
-                        z
-                        for z in G.nodes()
-                        if G.nodes[z]["color"] == G.nodes[y]["color"] and z != y
-                    ]
+    # 1. Einzigartige Farb-Attribute (Labels) extrahieren
+    unique_colors = sorted(list(set(BMG.nodes[n].get('color', '') for n in BMG.nodes())))
     
-                if candidates:
-    
-                    z = random.choice(candidates)
-                    r_name = f"r_{x}_{z}"
-                    BCN.add_edge(q_name, r_name)
-                    BCN.add_edge(r_name, x)
-                    BCN.add_edge(r_name, z)
-                    # cherryRs[(x, z)] = r_name
-    
-            # --- Richtung y -> x ---
-            if not G.has_edge(y, x):
-                candidates = [
-                    z
-                    for z in G.successors(y)
-                    if G.nodes[z]["color"] == G.nodes[x]["color"]
-                ]
-                if not candidates:
-                    candidates = [
-                        z
-                        for z in G.predecessors(y)
-                        if G.nodes[z]["color"] == G.nodes[x]["color"] and z != x
-                    ]
-                if not candidates:
-                    candidates = [
-                        z
-                        for z in G.nodes()
-                        if G.nodes[z]["color"] == G.nodes[x]["color"] and z != x
-                    ]
-    
-                if candidates:
-    
-                    z = random.choice(candidates)
-                    r_name = f"r_{y}_{z}"
-                    BCN.add_edge(q_name, r_name)
-                    BCN.add_edge(r_name, y)
-                    BCN.add_edge(r_name, z)
-                    # cherryRs[(y, z)] = q_name
+    # 2. Integrierte Colormap-Logik basierend auf der Anzahl der Farben
+    if len(unique_colors) <= 10:
+        cmap = plt.get_cmap("tab10")(np.arange(len(unique_colors), dtype=int))
+    else:
+        cmap = plt.get_cmap("jet")(np.linspace(0, 1.0, len(unique_colors)))
 
-    return BCN
-
-
-def findCandidate(BMG: nx.DiGraph,x,y):
-    # Suche nach einem besseren Match für x als y
-    # zunächst wird geschaut, ob es einen Best Match für x gibt, der die egleiche Farbe wie y hat
-    # wird davon keiner gefunden, wird Node z gewählt, mit gleicher Farbe wie y und dessen Best Match x ist
-    # wenn davon keiner gefunden wird, wird irgendeine Node gewählt, die die gleiche Farbe wie y hat
-    
-    candidates = [
-        z
-        for z in BMG.successors(x)
-        if BMG.nodes[z]["color"] == BMG.nodes[y]["color"]
-    ]
-    if not candidates:
-        candidates = [
-            z
-            for z in BMG.predecessors(x)
-            if BMG.nodes[z]["color"] == BMG.nodes[y]["color"] and z != y
-        ]
-    if not candidates:
-        candidates = [
-            z
-            for z in BMG.nodes()
-            if BMG.nodes[z]["color"] == BMG.nodes[y]["color"] and z != y
-        ]
-
-    z = random.choice(candidates)
-    return z
-
-def insertNode(BCN: nx.DiGraph,layer: int, namePrev, x, z):
-
-    # hier muss noch ein umwandeln von layer(int) ind layer(str) stattfunden. 
-    nameNew = f"{layer}_{x}_{z}"
-    BCN.add_edge(namePrev, nameNew)
-    BCN.add_edge(nameNew, x)
-    BCN.add_edge(nameNew, z)
-    if BCN.has_edge(namePrev,x):
-        BCN.remove_edge(namePrev,x)
-
-    return nameNew
-
-
-
-def MultiLayerdBICCherry(BMG: nx.DiGraph, maxLayers: int = 20):
-    BCN = nx.DiGraph()
-    BCN.add_node("rho")
-
-    cherryPs = {}
-    currentDict = {}
-    nextDict = {}
-    for leaf in BMG.nodes():
-        BCN.add_node(leaf, color= BMG.nodes[leaf]["color"], label=leaf)
-    
-    if len(BMG.nodes()) == 2:
-        for leaf in BMG.nodes():
-            BCN.add_edge("rho", leaf)
-        return BCN
-
-    # P-Layer
-    for x, y in itertools.combinations(BMG.nodes(), 2):
-        if BMG.nodes[x]["color"] != BMG.nodes[y]["color"]:
-            p_name = f"p_{x}_{y}"
-            BCN.add_edge("rho", p_name)
-            BCN.add_edge(p_name, x)
-            BCN.add_edge(p_name, y)
-            cherryPs[(x, y)] = p_name
-
-    # Q-Extensions
-    for (x, y), p_name in cherryPs.items():
-
-        if not BMG.has_edge(x,y):
-            z = findCandidate(BMG, x, y)
-            nodeName = insertNode(BCN, 1, p_name, x, z)
-            currentDict[(x,z)] = nodeName
-
-        if not BMG.has_edge(y,x):
-            z = findCandidate(BMG, y, x)
-            nodeName = insertNode(BCN, 1, p_name, y, z)
-            currentDict[(y,z)] = nodeName
-
-    # lower leayers
-    # Es werden die gerade eingefügten Kanten (x->y) untersucht, ob diese einen Best-Match (y->x) generiert haben, der gar nicht da sein sollte.
-    # Ist dies der Fall, wird für y->x eine neue Ebene eingefügt um diese zu trennen
-
-    # Problem: neue Kanten nicht eindeutig benannt. Wenn x,y1 und x,y2 fälschlicherweise noch vorhanden sind, und beide durch x,z gelöst werden,
-    # so sollte es zwei neue Knoten geben, allerdings entsteht hier nur ein neuer: layer_x_z
-
-    # (BMG.edges() - bmg(BCN).edges())
-    for layer in range(2,maxLayers):
-        currentBMG = bmg(BCN)
-        if nx.utils.graphs_equal(BMG, currentBMG):
-            break
-
+    # 3. Mapping-Dictionary (color_dict) aufbauen
+    color_dict = {}
+    for label, color in zip(unique_colors, cmap):
+        color_dict[label] = color
         
-        for (x,y), prevName in currentDict.items():
-            if not BMG.has_edge(y,x):
-                z = findCandidate(BMG, y, x)
-                nodeName = insertNode(BCN, layer, prevName, y, z)
-                nextDict[(y,z)] = nodeName
+    # 4. Farben in der korrekten Reihenfolge der sortierten Nodes zuweisen
+    node_colors = [color_dict[BMG.nodes[n].get('color', '')] for n in sorted_nodes]
 
-        currentDict = nextDict
-        nextDict = {}
+    if ax is None:
+        ax = plt.gca()
 
-    return BCN
+    nx.draw(
+        BMG, 
+        pos=pos, 
+        ax=ax,
+        nodelist=sorted_nodes,      
+        node_color=node_colors, 
+        with_labels=True,
+        node_size=600,
+        font_color="black",
+        font_weight="bold",
+        edge_color="black",
+        arrows=True,
+        connectionstyle="arc3,rad=0.05"  # Biegt die Kanten
+    )
+    if ax:
+        ax.set_aspect('equal')
+
+
+
+
+def visualize_network(N, ax=None):
+    pos = graphviz_layout(N, prog="dot")
+    
+    # 1. Einzigartige Farb-Attribute nur von den Blättern (out_degree == 0) extrahieren
+    leaves = [n for n in N.nodes() if N.out_degree(n) == 0]
+    unique_colors = sorted(list(set(N.nodes[n].get('color', '') for n in leaves)))
+    
+    # 2. Colormap-Logik für die Blätter anwenden
+    if len(unique_colors) <= 10:
+        cmap = plt.get_cmap("tab10")(np.arange(len(unique_colors), dtype=int))
+    else:
+        cmap = plt.get_cmap("jet")(np.linspace(0, 1.0, len(unique_colors)))
+
+    color_dict = {label: color for label, color in zip(unique_colors, cmap)}
+    
+    # 3. Farbzuweisung: Innere Knoten (Grau), Blätter (aus color_dict)
+    node_colors = []
+    for n in N.nodes():
+        if N.out_degree(n) > 0:
+            node_colors.append("gray")
+        else:
+            node_colors.append(color_dict.get(N.nodes[n].get('color', ''), "black"))
+
+    # 4. Graphen zeichnen (geradlinige Kanten, da connectionstyle fehlt)
+    if ax is None:
+        ax = plt.gca()
+
+    nx.draw(
+        N, 
+        pos=pos, 
+        ax=ax,
+        node_color=node_colors, 
+        with_labels=True,
+        node_size=600,
+        font_color="white",
+        font_weight="bold",
+        edge_color="black",
+        arrows=True
+    )
+
+
+def visualize_BCN(BCN, ax=None):
+    # 1. Knoten den 4 Ebenen zuordnen
+    roots = [n for n in BCN.nodes() if BCN.in_degree(n) == 0]
+    rho = roots[0] if roots else "rho"
+    
+    p_nodes = set(BCN.successors(rho)) if rho in BCN else set()
+    leaves = set(n for n in BCN.nodes() if BCN.out_degree(n) == 0)
+    q_nodes = set(BCN.nodes()) - set(roots) - p_nodes - leaves
+
+    # 2. Graph in pydot umwandeln und rank="same" für jede Ebene erzwingen
+    pydot_graph = nx.nx_pydot.to_pydot(BCN)
+    
+    for level_nodes in [p_nodes, q_nodes, leaves]:
+        if level_nodes:
+            subgraph = pydot.Subgraph(rank='same')
+            for n in level_nodes:
+                subgraph.add_node(pydot.Node(str(n)))
+            pydot_graph.add_subgraph(subgraph)
+
+    # 3. Graphviz berechnet die X-Positionen nun unter Berücksichtigung der festen Ebenen
+    raw_pos = graphviz_layout(pydot_graph, prog="dot")
+
+    # 4. Y-Koordinaten auf die 4 festen Ebenen zuweisen (3, 2, 1, 0)
+    pos = {}
+    for node_key, (x, _) in raw_pos.items():
+        # pydot wandelt Knotennamen teils in Strings um; hier wieder auf den Originalknoten mappen
+        node = node_key
+        if node not in BCN:
+            for orig_node in BCN.nodes():
+                if str(orig_node) == str(node_key):
+                    node = orig_node
+                    break
+
+        if node in roots:
+            y = 3.0
+        elif node in p_nodes:
+            y = 2.0
+        elif node in q_nodes:
+            y = 1.0
+        else:
+            y = 0.0
+        pos[node] = (x, y)
+
+    # 5. Colormap-Logik für die Blätter
+    unique_colors = sorted(list(set(BCN.nodes[n].get('color', '') for n in leaves)))
+    
+    if len(unique_colors) <= 10:
+        cmap = plt.get_cmap("tab10")(np.arange(len(unique_colors), dtype=int))
+    else:
+        cmap = plt.get_cmap("jet")(np.linspace(0, 1.0, len(unique_colors)))
+
+    color_dict = {label: color for label, color in zip(unique_colors, cmap)}
+    
+    # 6. Farben zuweisen: Innere Knoten (grau), Blätter (bunt)
+    node_colors = []
+    for n in BCN.nodes():
+        if n in leaves:
+            node_colors.append(color_dict.get(BCN.nodes[n].get('color', ''), "black"))
+        else:
+            node_colors.append("gray")
+
+    # 7. Graph zeichnen
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(14, 10))
+
+    nx.draw(
+        BCN, 
+        pos=pos, 
+        ax=ax,
+        node_color=node_colors, 
+        with_labels=True,
+        node_size=600,
+        font_color="white",
+        font_weight="bold",
+        edge_color="black",
+        arrows=True
+    )

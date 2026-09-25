@@ -2,7 +2,7 @@
 	- Ansatz, wie sichergestellt wird, dass keine Cyclen entstehen
 - Ausarbeitung der Funktion bmg
 	- Mit Suche über die Menge aller LCAS von x zu anderer Farbe
-- Bei Bäumen ist der bmg immer gleich, egal ob man die weak oder strong definition wählt. (Test??)
+- Bei Bäumen ist der bmg immer gleich, egal ob man die weak oder strong definition wählt. (Test / Beweis?)
 - wenn man allerdings den BCEA von einem Tree-BMG baut, ist es wichtig, dass man die strong definition wählt, da durch die weak-definitionen unnötige best matches "entstehen"
 	- Also sollte man bei Bäumen immer im strong mode bleiben
 - 
@@ -12,7 +12,8 @@
 	- Unterschied zwischen weak und strong!
 		- bei weak: y' bevorzugt, wenn x = bm(y') und y' = bm(x)
 		- bei strong: y' bevorzugt genauso aber zusätzlich: Keine Brücke über 2 Q-Knoten erzeugen, die zwei Blätter verbinden, die keine best matches zueinander sind.
+			- Starke Verbesserung!!!
 - Break von BCEA bei weak und strong
 	- Verbesserung BCEA mit weiteren Layern (für weak)
-	- Verbesserung für strong?
--  
+	- Verbesserung für strong -> Wahl der y' Kandidaten
+-  Heatmaps der möglichen Hybriden vor break

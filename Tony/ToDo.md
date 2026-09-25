@@ -5,15 +5,19 @@
 - [x] Kann es sein, dass die BMGs immer dann kaputte gehen, wenn ein Hybrid zu einem Blatt einer anderen Farbe gebildet wird?
 - [x] Vergleich ```asymmetree.analysis.bmg``` mit unserer BMG Funktion
 	- [x] assymetree funktioniert nur bei Bäumen!
-- [ ] Thinnes-Class-Funktion für BMG (macht Julia)
-	- [ ] Funktion für Vereinfachung der Genbäume (alle Gene einer Spezies die aus der selben Speziation entstanden sind zu einem Gen zusammenfassen)?
+- [x] Thinnes-Class-Funktion für BMG (macht Julia)
+	- [x] Funktion für Vereinfachung der Genbäume (alle Gene einer Spezies die aus der selben Speziation entstanden sind zu einem Gen zusammenfassen)?
+- [x] ewig langen loop bauen um strong bmg auf trees zu testen
+	- [x] Kann man bei BIC-Cherry gewisse Kanten rauslöschen, ohne dass etwas kaputt geht
+	- [x] kann man nach jeder hinzugefügten Kante schauen, ob der BMG bereits der Richtige ist (selektiv Kanten hinzufügen) (erst die BM fixen, die in keine Richtung verbunden sind, dann wenn der BMG noch nicht stimmt, weiter machen)
+		- [ ] vielleicht als Vorschlag für Präsi, wird aber nicht so reproduzierbar sein wie gewünscht
+	- [x] Bei der Wahl von Z: Wenn es mehrere best matches zu x gibt, dann den wählen, bei dem auch gilt z->x
+	- [x] Kandidatenwahl als Hilfsfunktion? -> bessere Lesbarkeit
+	- [x] BIC-Cherry explizit für strong definition
+- [ ] sollte man im BCEA eine Abfrage einbauen, um zu testen ob es einen erklärenden Baum des BMGs gibt(über explaining triples?)
+	- [ ] Hinweis ausprinten, dass BCEA unnötig ist, least resolved Tree besser wäre
+- [ ] Unit-Tests
 - [ ] Neue Darstellung für BICCherry Netzwerke
+- [ ] Funktion VisualizeBMG / Network / BCN
 - [ ] Definitionen konkretisieren für Folien
 - [ ] BIC Cherry verbessern
-	- [ ] Kann man bei BIC-Cherry gewisse Kanten rauslöschen, ohne dass etwas kaputt geht
-	- [ ] kann man nach jeder hinzugefügten Kante schauen, ob der BMG bereits der Richtige ist (selektiv Kanten hinzufügen) (erst die BM fixen, die in keine Richtung verbunden sind, vielleicht mit nur einer Kante, dann wenn der BMG noch nicht stimmt, weiter machen)
-	- [x] Bei der Wahl von Z: Wenn es mehrere best matches zu x gibt, dann den wählen, bei dem auch gilt z->x
-	- [ ] Kandidatenwahl als Hilfsfunktion? -> bessere Lesbarkeit
-	- [ ] BIC-Cherry explizit für strong definition
-- [ ] ewig langen loop bauen um strong bmg auf trees zu testen
-- [ ] sollte man eine Abfrage einbauen, um zu testen ob es einen erklärenden Baum des BMGs gibt(über explaining triples?)
