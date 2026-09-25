@@ -101,7 +101,7 @@ def find_joint_candidates(BMG: nx.DiGraph, x, y):
 
 
 
-def BCEA(G: nx.DiGraph, mode: str = "weak") -> nx.DiGraph:
+def BCEA(G: nx.DiGraph, mode: str = "strong") -> nx.DiGraph:
     # ASSERTIONS
     assert mode in ("weak", "strong"), f"mode must be 'weak' or 'strong', got {mode!r}"
     assert isinstance(G, nx.DiGraph)

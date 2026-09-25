@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import graphviz_layout
 import pydot
 
+import shlex
+import subprocess
+
+
 def generateTree(seed:int = None, nSpecies:int = 2):
 
     if seed:
@@ -116,80 +120,179 @@ def visualize_network(N, ax=None):
     )
 
 
-def visualize_BCN(BCN, ax=None):
-    # 1. Knoten den 4 Ebenen zuordnen
+def _dot_quote(s) -> str:
+    return '"' + str(s).replace('"', '\\"') + '"'
+ 
+ 
+def _classify_bcn_nodes(BCN: nx.DiGraph):
+    """
+    Klassifiziert die Knoten eines Standard-BIC-Cherry-Netzwerks (nur P-
+    und Q-Ebene) in rho, p_nodes, q_nodes, leaves.
+ 
+    Wirft ValueError, falls die Struktur nicht genau diesem 4-Ebenen-Schema
+    entspricht (z.B. bei einem Multi-Layer-BCN mit weiteren R-/S-/...-
+    Knoten) -- diese Funktion ist bewusst nur fuer "Standard"-BCNs gedacht.
+    """
     roots = [n for n in BCN.nodes() if BCN.in_degree(n) == 0]
-    rho = roots[0] if roots else "rho"
-    
-    p_nodes = set(BCN.successors(rho)) if rho in BCN else set()
-    leaves = set(n for n in BCN.nodes() if BCN.out_degree(n) == 0)
-    q_nodes = set(BCN.nodes()) - set(roots) - p_nodes - leaves
-
-    # 2. Graph in pydot umwandeln und rank="same" für jede Ebene erzwingen
-    pydot_graph = nx.nx_pydot.to_pydot(BCN)
-    
-    for level_nodes in [p_nodes, q_nodes, leaves]:
-        if level_nodes:
-            subgraph = pydot.Subgraph(rank='same')
-            for n in level_nodes:
-                subgraph.add_node(pydot.Node(str(n)))
-            pydot_graph.add_subgraph(subgraph)
-
-    # 3. Graphviz berechnet die X-Positionen nun unter Berücksichtigung der festen Ebenen
-    raw_pos = graphviz_layout(pydot_graph, prog="dot")
-
-    # 4. Y-Koordinaten auf die 4 festen Ebenen zuweisen (3, 2, 1, 0)
-    pos = {}
-    for node_key, (x, _) in raw_pos.items():
-        # pydot wandelt Knotennamen teils in Strings um; hier wieder auf den Originalknoten mappen
-        node = node_key
-        if node not in BCN:
-            for orig_node in BCN.nodes():
-                if str(orig_node) == str(node_key):
-                    node = orig_node
-                    break
-
-        if node in roots:
-            y = 3.0
-        elif node in p_nodes:
-            y = 2.0
-        elif node in q_nodes:
-            y = 1.0
-        else:
-            y = 0.0
-        pos[node] = (x, y)
-
-    # 5. Colormap-Logik für die Blätter
-    unique_colors = sorted(list(set(BCN.nodes[n].get('color', '') for n in leaves)))
-    
-    if len(unique_colors) <= 10:
-        cmap = plt.get_cmap("tab10")(np.arange(len(unique_colors), dtype=int))
-    else:
-        cmap = plt.get_cmap("jet")(np.linspace(0, 1.0, len(unique_colors)))
-
-    color_dict = {label: color for label, color in zip(unique_colors, cmap)}
-    
-    # 6. Farben zuweisen: Innere Knoten (grau), Blätter (bunt)
-    node_colors = []
-    for n in BCN.nodes():
-        if n in leaves:
-            node_colors.append(color_dict.get(BCN.nodes[n].get('color', ''), "black"))
-        else:
-            node_colors.append("gray")
-
-    # 7. Graph zeichnen
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(14, 10))
-
-    nx.draw(
-        BCN, 
-        pos=pos, 
-        ax=ax,
-        node_color=node_colors, 
-        with_labels=True,
-        node_size=600,
-        font_color="white",
-        font_weight="bold",
-        edge_color="black",
-        arrows=True
+    if len(roots) != 1:
+        raise ValueError(f"Erwarte genau eine Wurzel (in_degree==0), gefunden: {roots}")
+    rho = roots[0]
+ 
+    leaves = {n for n in BCN.nodes() if BCN.out_degree(n) == 0}
+    if not leaves:
+        raise ValueError("Keine Blaetter (out_degree==0) gefunden.")
+ 
+    p_nodes = set(BCN.successors(rho)) - leaves
+    q_nodes = set(BCN.nodes()) - {rho} - p_nodes - leaves
+ 
+    for p in p_nodes:
+        for child in BCN.successors(p):
+            if child not in leaves and child not in q_nodes:
+                raise ValueError(
+                    f"P-Knoten {p!r} hat ein Kind {child!r}, das weder Blatt noch "
+                    f"Q-Knoten ist -- das ist kein Standard-P+Q-BCN (evtl. Multi-Layer?)."
+                )
+    for q in q_nodes:
+        if any(p not in p_nodes for p in BCN.predecessors(q)):
+            raise ValueError(f"Q-Knoten {q!r} haengt nicht ausschliesslich an P-Knoten.")
+        for child in BCN.successors(q):
+            if child not in leaves:
+                raise ValueError(
+                    f"Q-Knoten {q!r} hat ein Kind {child!r}, das kein Blatt ist -- "
+                    f"das ist kein Standard-P+Q-BCN (evtl. Multi-Layer?)."
+                )
+ 
+    return rho, p_nodes, q_nodes, leaves
+ 
+ 
+def _dot_layout_with_ranks(BCN: nx.DiGraph, rank_groups: list) -> dict:
+    """
+    Ruft `dot` mit expliziten rank=same-Gruppen auf (top-to-bottom in der
+    gegebenen Reihenfolge) und liefert {node: (x, y)} zurueck. `dot`
+    uebernimmt dabei sowohl die vorgegebene Ebeneneinteilung als auch die
+    kreuzungsarme horizontale Anordnung innerhalb jeder Ebene.
+    """
+    lines = ["digraph G {", "rankdir=TB;", "nodesep=0.4;", "ranksep=1.1;"]
+    for group in rank_groups:
+        if not group:
+            continue
+        names = " ".join(_dot_quote(n) for n in sorted(group, key=str))
+        lines.append(f"{{rank=same; {names};}}")
+    for u, v in BCN.edges():
+        lines.append(f"{_dot_quote(u)} -> {_dot_quote(v)};")
+    lines.append("}")
+    dot_source = "\n".join(lines)
+ 
+    result = subprocess.run(
+        ["dot", "-Tplain"], input=dot_source, capture_output=True, text=True, check=True
     )
+ 
+    pos = {}
+    for line in result.stdout.splitlines():
+        parts = shlex.split(line)
+        if parts and parts[0] == "node":
+            name = parts[1]
+            pos[name] = (float(parts[2]), float(parts[3]))
+    return pos
+ 
+ 
+def visualize_BCN(
+    BCN: nx.DiGraph,
+    ax=None,
+    figsize=(14, 8),
+    leaf_font_size=9,
+    internal_font_size=6,
+    show_internal_labels=False,
+    save_path=None,
+):
+    """
+    Zeichnet ein STANDARD-BIC-Cherry-Netzwerk (nur P- und Q-Ebene) in
+    exakt vier vertikalen Ebenen: rho (zentriert), P-Knoten, Q-Knoten,
+    farbige Blaetter -- horizontal kreuzungsarm via `dot` mit expliziten
+    rank=same-Vorgaben angeordnet.
+ 
+    Fuer Multi-Layer-BCNs (mit R-/S-/...-Knoten, siehe MLBCEA) wirft diese
+    Funktion einen ValueError -- dafuer braeuchte es eine Variante mit
+    variabler Ebenenzahl.
+ 
+    Parameters
+    ----------
+    BCN : networkx.DiGraph
+        Das zu zeichnende BIC-Cherry-Netzwerk. Blaetter brauchen ein
+        "color"-Attribut.
+    ax : matplotlib.axes.Axes, optional
+        Falls gegeben, wird darauf gezeichnet statt eine neue Figure zu
+        erstellen.
+    show_internal_labels : bool
+        Ob P-/Q-Knotennamen mit angezeigt werden (meist unleserlich lang,
+        daher Default False).
+    save_path : str, optional
+        Falls gegeben, wird die Figure dorthin gespeichert.
+ 
+    Returns
+    -------
+    ax : matplotlib.axes.Axes
+    """
+    rho, p_nodes, q_nodes, leaves = _classify_bcn_nodes(BCN)
+ 
+    rank_groups = [[rho], p_nodes, q_nodes, leaves]
+    pos = _dot_layout_with_ranks(BCN, rank_groups)
+ 
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+ 
+    # --- Farben fuer Blaetter ---
+    leaf_colors_raw = sorted({BCN.nodes[l]["color"] for l in leaves}, key=str)
+    palette = plt.cm.tab10.colors
+    color_map = {c: palette[i % len(palette)] for i, c in enumerate(leaf_colors_raw)}
+ 
+    # --- Kanten zeichnen ---
+    for u, v in BCN.edges():
+        x1, y1 = pos[u]
+        x2, y2 = pos[v]
+        ax.plot([x1, x2], [y1, y2], color="#999999", linewidth=0.8, zorder=1)
+ 
+    # --- Knoten zeichnen ---
+    def draw_nodes(nodes, color, size, label_fn=None, font_size=8):
+        for n in nodes:
+            x, y = pos[n]
+            ax.scatter(x, y, s=size, color=color, edgecolors="black",
+                       linewidths=0.6, zorder=2)
+            if label_fn is not None:
+                ax.annotate(label_fn(n), (x, y), textcoords="offset points",
+                            xytext=(0, -size ** 0.5 - 6), ha="center",
+                            va="top", fontsize=font_size, zorder=3)
+ 
+    draw_nodes([rho], "black", 120)
+    draw_nodes(p_nodes, "#DDDDDD", 90,
+               label_fn=(lambda n: n) if show_internal_labels else None,
+               font_size=internal_font_size)
+    draw_nodes(q_nodes, "#AAAAAA", 90,
+               label_fn=(lambda n: n) if show_internal_labels else None,
+               font_size=internal_font_size)
+    for leaf in leaves:
+        x, y = pos[leaf]
+        ax.scatter(x, y, s=260, color=color_map[BCN.nodes[leaf]["color"]],
+                   edgecolors="black", linewidths=0.8, zorder=2)
+        ax.annotate(str(leaf), (x, y), ha="center", va="center",
+                    fontsize=leaf_font_size, fontweight="bold", zorder=3)
+ 
+    # --- Legende fuer Blattfarben ---
+    handles = [
+        plt.Line2D([0], [0], marker="o", linestyle="", markersize=10,
+                   markerfacecolor=color_map[c], markeredgecolor="black", label=str(c))
+        for c in leaf_colors_raw
+    ]
+    ax.legend(handles=handles, title="Farbe", loc="upper right", fontsize=9)
+ 
+    ax.set_axis_off()
+    ax.set_title(
+        f"BIC-Cherry-Netzwerk  (rho={1}, P={len(p_nodes)}, Q={len(q_nodes)}, "
+        f"Blaetter={len(leaves)})"
+    )
+    plt.tight_layout()
+ 
+    if save_path:
+        plt.savefig(save_path, dpi=150)
+ 
+    return ax

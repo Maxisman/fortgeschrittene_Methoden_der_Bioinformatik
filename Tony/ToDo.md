@@ -16,8 +16,8 @@
 	- [x] BIC-Cherry explizit für strong definition
 - [ ] sollte man im BCEA eine Abfrage einbauen, um zu testen ob es einen erklärenden Baum des BMGs gibt(über explaining triples?)
 	- [ ] Hinweis ausprinten, dass BCEA unnötig ist, least resolved Tree besser wäre
-- [ ] Unit-Tests
-- [ ] Neue Darstellung für BICCherry Netzwerke
-- [ ] Funktion VisualizeBMG / Network / BCN
+- [x] Neue Darstellung für BICCherry Netzwerke
+- [x] Funktion VisualizeBMG / Network / BCN
 - [ ] Definitionen konkretisieren für Folien
-- [ ] BIC Cherry verbessern
+- [ ] Tasks und Figures füllen
+- [ ] Unit-Tests

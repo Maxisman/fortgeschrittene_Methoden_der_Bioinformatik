@@ -3,9 +3,8 @@
 - Ausarbeitung der Funktion bmg
 	- Mit Suche über die Menge aller LCAS von x zu anderer Farbe
 - Bei Bäumen ist der bmg immer gleich, egal ob man die weak oder strong definition wählt. (Test / Beweis?)
-- wenn man allerdings den BCEA von einem Tree-BMG baut, ist es wichtig, dass man die strong definition wählt, da durch die weak-definitionen unnötige best matches "entstehen"
+- wenn man allerdings den BCEA von einem Tree-BMG baut, ist es wichtig, dass man die strong definition wählt, da durch die weak-definitionen unnötige best matches "entstehen" (Beispiel siehe Notes-app)
 	- Also sollte man bei Bäumen immer im strong mode bleiben
-- 
 - Auswahl von y' bzw. z im BCEA
 	- Bei Trees ist die Auswahl egal (im Strong mode, bei weak definition nicht.)
 	- Bei Netzwerken muss unterschieden werden!
@@ -17,3 +16,9 @@
 	- Verbesserung BCEA mit weiteren Layern (für weak)
 	- Verbesserung für strong -> Wahl der y' Kandidaten
 -  Heatmaps der möglichen Hybriden vor break
+- Verbesserungen:
+	- Vorab die Netzwerke vereinfachen
+		- Thinness (Anhand vom BMG)
+		- BCEA: Blätter die alle Blätter als best match haben direkt an die Wurzel
+	- Kandidatenwahl beim BMG
+		- Für Strong im Bezug auf safe pairs: muss entschieden werden, ob die Darstellbarkeit des BMGs (safe pairs als Kandidaten) wichtiger ist, oder der biologische Sinn (best match bevorzugt als Kandidat)
