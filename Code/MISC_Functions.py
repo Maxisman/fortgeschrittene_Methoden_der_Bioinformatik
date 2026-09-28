@@ -202,7 +202,7 @@ def visualize_BCN(
     figsize=(14, 8),
     leaf_font_size=9,
     internal_font_size=6,
-    show_internal_labels=False,
+    show_internal_labels=True,
     save_path=None,
 ):
     """
@@ -283,13 +283,8 @@ def visualize_BCN(
                    markerfacecolor=color_map[c], markeredgecolor="black", label=str(c))
         for c in leaf_colors_raw
     ]
-    ax.legend(handles=handles, title="Farbe", loc="upper right", fontsize=9)
  
     ax.set_axis_off()
-    ax.set_title(
-        f"BIC-Cherry-Netzwerk  (rho={1}, P={len(p_nodes)}, Q={len(q_nodes)}, "
-        f"Blaetter={len(leaves)})"
-    )
     plt.tight_layout()
  
     if save_path:
