@@ -2,12 +2,15 @@ import random
 import networkx as nx
 import matplotlib.cm as cm
 
-def insertHybrid(N:nx.DiGraph, i:int = 1):
+def insertHybrid(N:nx.DiGraph, i:int = 1, seed : int = None):
 
     ### Entry Assertions
     assert isinstance(N, nx.DiGraph), "Eingabe muss ein nx.DiGraph sein!"
     assert isinstance(i,int), "Anzahl der Hybridisierungsevents muss int ein"
     assert N.number_of_edges() > 0, "Graph hat keine Kanten!"
+
+    if seed:
+        random.seed(seed)
 
     N_mod = N.copy()
 
@@ -214,3 +217,7 @@ def insertHybrid2(N:nx.DiGraph, i:int = 1):
         assert nx.is_directed_acyclic_graph(N_mod), "Zyklus generiert!"
 
     return N_mod,connectedNodes
+
+
+def insert_hybrids_on_edges(Netzwerk):
+    pass

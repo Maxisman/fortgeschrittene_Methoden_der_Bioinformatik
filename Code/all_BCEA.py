@@ -151,13 +151,6 @@ def BCEA2(G: nx.DiGraph) -> nx.DiGraph:
         x,y = sorted(pair)
         if not G.has_edge(x,y):
 
-            # statt random choice, sollte hier der successor gewählt werden, der widerum x als best match hat, sofern vorhanden
-
-            # Alte Auswahl:
-            # y_prime = rng.choice([v for v in G.successors(x) if colors[v]==colors[y]])
-
-            # neue Auswahl:
-            # 1. reziproger best match (x->z & z->x)
             # 2. asymmetrischer best match (x->z)
             # 3. asymmetrischer best match (z->x)
             # 4. irgendein y' != y
@@ -178,25 +171,10 @@ def BCEA2(G: nx.DiGraph) -> nx.DiGraph:
             N.add_edge(p_name,q_name)
             N.add_edge(q_name, x)
             N.add_edge(q_name, y_prime)
-
-            # soll man die Edge zwischen p_name und x löschen? diese ist shortcut
-
             N.remove_edge(p_name,x)
 
         if not G.has_edge(y,x):
             
-            # statt random choice, sollte hier der successor gewählt werden, der widerum x als best match hat
-
-            # Alte Auswahl
-            # x_prime = rng.choice([v for v in G.successors(y) if colors[v]==colors[x]])
-
-            # neue Auswahl:
-            # 1. reziproger best match (x->z & z->x)
-            # 2. asymmetrischer best match (x->z)
-            # 3. asymmetrischer best match (z->x)
-            # 4. irgendein y' != y
-
-
             candidates = []
             candidates = [v for v in G.successors(y) if colors[v] == colors[x]]
 
@@ -214,12 +192,8 @@ def BCEA2(G: nx.DiGraph) -> nx.DiGraph:
             N.add_edge(p_name, q_name)
             N.add_edge(q_name, y)
             N.add_edge(q_name, x_prime)
-
-            # soll man die Edge zwischen p_name und y löschen? diese ist shortcut
-
             N.remove_edge(p_name,y)
                           
-    # return network
     return N
 
 def find_candidate(BMG: nx.DiGraph, x, y, mode: str = "weak"):
@@ -408,7 +382,7 @@ def _has_reciprocal_option(BMG: nx.DiGraph, node, target_color) -> bool:
     )
 
 
-def find_candidate(BMG: nx.DiGraph, x, y):
+def ml_find_candidate(BMG: nx.DiGraph, x, y):
     """
     Sucht einen Ersatzkandidaten fuer y (gleiche Farbe wie y), der x's
     fehlenden Match zu y ersetzt.
@@ -564,13 +538,13 @@ def BCEA4(BMG: nx.DiGraph, maxLayers: int = None):
 
     for (x, y), p_name in cherryPs.items():
         if not BMG.has_edge(x, y):
-            z, reciprocal = find_candidate(BMG, x, y)
+            z, reciprocal = ml_find_candidate(BMG, x, y)
             node_name = insertNode(BCN, 1, p_name, x, z, node_counter)
             if not reciprocal:
                 pending.append({"leaf": z, "wrong_match": x, "parent": node_name})
 
         if not BMG.has_edge(y, x):
-            z, reciprocal = find_candidate(BMG, y, x)
+            z, reciprocal = ml_find_candidate(BMG, y, x)
             node_name = insertNode(BCN, 1, p_name, y, z, node_counter)
             if not reciprocal:
                 pending.append({"leaf": z, "wrong_match": y, "parent": node_name})
@@ -584,7 +558,7 @@ def BCEA4(BMG: nx.DiGraph, maxLayers: int = None):
             # leaf hat wrong_match faelschlich als Best Match; wir suchen
             # fuer leaf einen echten Ersatz fuer wrong_match (exakt dieselbe
             # Logik wie in der P/Q-Ebene, nur eine Stufe tiefer angesetzt).
-            w, reciprocal = find_candidate(BMG, leaf, wrong_match)
+            w, reciprocal = ml_find_candidate(BMG, leaf, wrong_match)
             node_name = insertNode(BCN, layer, parent_name, leaf, w, node_counter)
             if not reciprocal:
                 next_pending.append({"leaf": w, "wrong_match": leaf, "parent": node_name})

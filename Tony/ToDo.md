@@ -21,3 +21,8 @@
 - [ ] Definitionen konkretisieren für Folien
 - [ ] Tasks und Figures füllen
 - [ ] Unit-Tests
+- [ ] Folie für Hybriden
+	- [ ] verschiedene Varianten
+	- [ ] wie haben wir Cyclen vermieden?
+	- [ ] Pseudocode
+- [ ] Netzwerke suchen als Beispiel, wann die besseren Auswahlkriterien Sinn machen
