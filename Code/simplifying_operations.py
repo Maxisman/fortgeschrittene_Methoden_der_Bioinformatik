@@ -4,6 +4,7 @@ import random
 from bmg_Tony import bmg
 from graph_functionality import compute_tree_likeness
 from network_editing_operations import remove_non_informative_nodes, remove_redundant_vertices
+import itertools
 
 """
     This script provides methods to simplify a graph network
@@ -232,15 +233,48 @@ def remove_diamond(network, network_bmg, bmg_mode):
                 network.add_edge(parent2, node)
     return network, False
 
-def greedy_search(network: nx.DiGraph,
+def combine_nodes(RBC):
+# Function from Tony, explanation missing
+    inner_nodes = [node for node in RBC.nodes if RBC.out_degree(node) > 0 and RBC.in_degree(node) > 0]
+    for node1, node2 in itertools.combinations(inner_nodes, 2):
+
+        # Knoten könnte durch eine frühere, akzeptierte Änderung schon entfernt worden sein
+        if not RBC.has_node(node1) or not RBC.has_node(node2):
+            continue
+
+        if (set(RBC.predecessors(node1)) == set(RBC.predecessors(node2))
+                and RBC.out_degree(node1) > 0
+                and RBC.out_degree(node2) > 0):
+
+            RBC2 = RBC.copy()  # echte, unabhängige Kopie
+            bmg_RBC = bmg(RBC, 'weak')
+
+            for successor in RBC.successors(node1):
+                RBC2.add_edge(node2, successor)
+            RBC2.remove_node(node1)
+
+            bmg_RBC2 = bmg(RBC2, 'weak')
+
+            if nx.utils.graphs_equal(bmg_RBC, bmg_RBC2):
+                RBC = RBC2
+                #return RBC2
+                #RBC = RBC2  # Änderung übernehmen
+                #bmg_RBC = bmg_RBC2  # Vergleichswert aktualisieren
+            #else:
+                #return RBC
+            # sonst: RBC2 wird einfach verworfen
+    return RBC
+
+
+def greedy_search(input_network: nx.DiGraph,
                   max_number_of_steps:int = 100,
                   tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness,
-                  bmg_mode:str="weak"):
+                  bmg_mode:str="weak", report_step_num:bool =False):
     """ Greedily searches for graph editing operations that can be performed on a network to make it more tree-like according to the tree_likeness_function.
 
         Parameters
         ----------
-        network: nx.DiGraph
+        input_network: nx.DiGraph
             network that will be edited to be more tree-like
         max_number_of_steps: int
             maximum number of editing steps before the final network is returned
@@ -248,6 +282,8 @@ def greedy_search(network: nx.DiGraph,
             function that measures the tree-likeness of a network numerically
         bmg_mode: String
             "weak" or "strong" depending on the best match type
+        report_step_num: Boolean
+            use True when you want to receive the number of steps as second output, also stops prints if true
 
         Returns
         -------
@@ -255,12 +291,14 @@ def greedy_search(network: nx.DiGraph,
             more tree like version of the network with the same best match graph
 
     """
+    network = input_network.copy()
     network_bmg = bmg(network, bmg_mode)
     score = tree_likeness_function(network)
     equal_score_steps = 0
 
     for i in range(max_number_of_steps):
-        print(f"simplifying step {i+1}/{max_number_of_steps}")
+        if not report_step_num:
+            print(f"simplifying step {i+1}/{max_number_of_steps}")
 
         remove_non_informative_nodes(network)
         remove_redundant_vertices(network)
@@ -291,8 +329,8 @@ def greedy_search(network: nx.DiGraph,
         #     continue
 
         # #removing diamonds
-        network, valid = remove_diamond(network, network_bmg, bmg_mode)
-        if valid:
+        #network, valid = remove_diamond(network, network_bmg, bmg_mode)
+        #if valid:
             equal_score_steps = 0
             score = tree_likeness_function(network)
             continue
@@ -309,7 +347,13 @@ def greedy_search(network: nx.DiGraph,
         equal_score_steps += 1
 
         if equal_score_steps > 10:
-            print("No further improvements found")
+            network = combine_nodes(network)
+            if report_step_num:
+                return network, i
+            else:
+                print("No further improvements found")
             return network
-
+    network = combine_nodes(network)
+    if report_step_num:
+        return network, i
     return network
