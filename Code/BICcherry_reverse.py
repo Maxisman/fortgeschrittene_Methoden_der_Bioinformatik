@@ -1,9 +1,10 @@
 from collections import defaultdict
+from collections import Counter
 
 import networkx as nx
 
 
-def BICcherry_reverse(bmg: nx.DiGraph, root: str = "rho") -> nx.DiGraph:
+def BICcherry_reverse(BMG: nx.DiGraph, root: str = "rho", simplify: bool = False) -> nx.DiGraph:
     """Build a network from a best match graph (BMG).
 
     Works edge by edge. Every edge x -> y of the BMG gets a "connecting
@@ -37,6 +38,112 @@ def BICcherry_reverse(bmg: nx.DiGraph, root: str = "rho") -> nx.DiGraph:
     Special case: a BMG consisting of exactly one reciprocal pair (two
     nodes) yields `root` directly as the parent of the two leaves.
     """
+    # BMG
+    bmg = BMG.copy()
+    ## assert colored digraph
+    assert isinstance(bmg, nx.DiGraph)
+    assert all("color" in bmg.nodes[v] for v in bmg.nodes)
+
+    ## assert properly colored (no edges between same color)
+    colors = nx.get_node_attributes(bmg, "color")
+    for u, v in bmg.edges():
+        assert colors[u] != colors[v]
+
+    ## assert sicor in hub
+    ### find all sicors
+    color_counts = Counter(colors.values())
+    sicor = [v for v, c in colors.items() if color_counts[c] == 1]
+    ### assert in-hub-ness
+    for s in sicor:
+        for u in bmg.nodes():
+            if colors[u] != colors[s]:
+                assert bmg.has_edge(u, s)
+
+    # simplifying the BMG and resulting generated network if flagged
+    net = nx.DiGraph()
+    if simplify:
+        need_to_break1 = False
+        need_to_break2 = False
+        curr_root_num = 0
+        curr_root = "rho" + f"_{curr_root_num}"
+        net.add_node(curr_root)
+
+        # create a color to node dict
+        color_to_leaves = {}
+        for v in bmg.nodes:
+            key = (
+                bmg.nodes[v]["color"]
+            )
+            color_to_leaves.setdefault(key, []).append(v)
+
+        # test if any node in the BMG exists that has every other node as a reciprocal best match
+        # run through this multiple times to catch nodes in subtrees
+        for i in range(len(bmg.nodes)):
+            leaves = bmg.nodes()
+            leaves_to_remove = []
+            att_to_root = False
+            for leaf in leaves:
+                suc = frozenset(bmg.successors(leaf))
+                prec = frozenset(bmg.predecessors(leaf))
+                if ((suc == prec) and (suc == leaves - [leaf])):
+                    #print(f"found {leaf}")
+                    cur_color = bmg.nodes[leaf]["color"]
+                    net.add_node(leaf, color=cur_color)
+                    net.add_edge(curr_root, leaf)
+                    leaves_to_remove.append(leaf)
+                    att_to_root = True
+            bmg.remove_nodes_from(leaves_to_remove)
+            if att_to_root:
+                curr_root_num += 1
+                curr_root = "rho" + f"_{curr_root_num}"
+            else:
+                need_to_break1 = True
+
+
+            # test if any node in BMG exists that has no incoming edges (pred) but has every other node (different color) as best match
+            leaves = bmg.nodes()
+            leaves_to_remove = []
+            att_to_root = False
+            for leaf in leaves:
+                cur_color = bmg.nodes[leaf]["color"]
+                same_color = color_to_leaves[cur_color]
+                prec = frozenset(bmg.predecessors(leaf))
+                suc = frozenset(bmg.successors(leaf))
+                if ((len(prec) == 0) and (suc == leaves - same_color)):
+                    #print(f"found {leaf}")
+                    net.add_node(leaf, color=cur_color)
+                    net.add_edge(curr_root, leaf)
+                    leaves_to_remove.append(leaf)
+                    att_to_root = True
+            bmg.remove_nodes_from(leaves_to_remove)
+            if att_to_root:
+                curr_root_num += 1
+                curr_root = "rho" + f"_{curr_root_num}"
+            else:
+                need_to_break2 = True
+
+            if need_to_break1:
+                # both steps did not find any improvements, break the loop
+                break
+        # TODO: Change root number after only a single full cycle
+
+        # reattach all roots
+        for i in range(curr_root_num):
+            net.add_edge("rho" + f"_{i}", "rho" + f"_{i + 1}")
+
+
+        # No edges left in BMG, return N
+        if len(bmg.edges()) == 0:
+            # remove last unused root
+            net.remove_node(curr_root)
+            return net
+        else:
+            # set root as current root for downstream processes
+            root = curr_root
+    else:
+        # add root and continue without simplification
+        net.add_node(root)
+
     key = str
 
     def color(n):
@@ -54,8 +161,7 @@ def BICcherry_reverse(bmg: nx.DiGraph, root: str = "rho") -> nx.DiGraph:
         key=lambda p: (key(p[0]), key(p[1])),
     )
 
-    net = nx.DiGraph()
-    net.add_node(root)
+
     for n in bmg.nodes:            # all leaves, with their color
         net.add_node(n, **bmg.nodes[n])
 
