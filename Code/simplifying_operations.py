@@ -142,14 +142,10 @@ def try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode
                 if allow_equal_score:
                     if new_score >= score:
                         if(nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg)):
-                            remove_non_informative_nodes(network)
-                            remove_redundant_vertices(network)
                             return network, new_score, True
                 else:
                     if new_score > score:
                         if(nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg)):
-                            remove_non_informative_nodes(network)
-                            remove_redundant_vertices(network)
                             return network, new_score, True
                     
                 network.remove_edge(grandparent, child)
@@ -244,11 +240,14 @@ def greedy_search(network: nx.DiGraph,
     for i in range(max_number_of_steps):
         print(f"simplifying step {i+1}/{max_number_of_steps}")
 
+        remove_non_informative_nodes(network)
+        remove_redundant_vertices(network)
+
         #contracting edges action
-        network, score, valid = contract_edge(network, score, network_bmg, tree_likeness_function, bmg_mode)
-        if valid:
-            equal_score_steps = 0
-            continue
+        # network, score, valid = contract_edge(network, score, network_bmg, tree_likeness_function, bmg_mode)
+        # if valid:
+        #     equal_score_steps = 0
+        #     continue
 
         #pull up action
         network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=False)
@@ -262,8 +261,22 @@ def greedy_search(network: nx.DiGraph,
             equal_score_steps = 0
             continue
 
-        network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
-        network, score, valid = try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
+        # #hybrid edge removal
+        # network, valid = remove_hybrid_edge(network, network_bmg, bmg_mode)
+        # if valid:
+        #     equal_score_steps = 0
+        #     score = score -1
+        #     continue
+
+        if random.randint(0,1) == 0:
+            network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
+            if not valid:
+                network, score, valid = try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
+        else:
+            network, score, valid = try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
+            if not valid:
+                network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
+
         equal_score_steps += 1
 
         if equal_score_steps > 10:
