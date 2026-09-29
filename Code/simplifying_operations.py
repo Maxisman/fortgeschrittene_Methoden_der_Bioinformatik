@@ -233,37 +233,46 @@ def remove_diamond(network, network_bmg, bmg_mode):
                 network.add_edge(parent2, node)
     return network, False
 
-def combine_nodes(RBC):
+def combine_nodes(network, network_bmg, bmg_mode):
 # Function from Tony, explanation missing
-    inner_nodes = [node for node in RBC.nodes if RBC.out_degree(node) > 0 and RBC.in_degree(node) > 0]
+    changed = False
+    inner_nodes = [node for node in network.nodes if network.out_degree(node) > 0 and network.in_degree(node) > 0]
     for node1, node2 in itertools.combinations(inner_nodes, 2):
 
         # Knoten könnte durch eine frühere, akzeptierte Änderung schon entfernt worden sein
-        if not RBC.has_node(node1) or not RBC.has_node(node2):
+        if not network.has_node(node1) or not network.has_node(node2):
             continue
 
-        if (set(RBC.predecessors(node1)) == set(RBC.predecessors(node2))
-                and RBC.out_degree(node1) > 0
-                and RBC.out_degree(node2) > 0):
+        if (set(network.predecessors(node1)) == set(network.predecessors(node2))
+                and network.out_degree(node1) > 0
+                and network.out_degree(node2) > 0):
 
-            RBC2 = RBC.copy()  # echte, unabhängige Kopie
-            bmg_RBC = bmg(RBC, 'weak')
+            #RBC2 = network.copy()  # echte, unabhängige Kopie
 
-            for successor in RBC.successors(node1):
-                RBC2.add_edge(node2, successor)
-            RBC2.remove_node(node1)
+            predecessors = set(network.predecessors(node1))
+            node1_successors = list(network.successors(node1))
+            node2_successors = list(network.successors(node2))
 
-            bmg_RBC2 = bmg(RBC2, 'weak')
+            for successor in node1_successors:
+                network.add_edge(node2, successor)
+            network.remove_node(node1)
 
-            if nx.utils.graphs_equal(bmg_RBC, bmg_RBC2):
-                RBC = RBC2
-                #return RBC2
-                #RBC = RBC2  # Änderung übernehmen
-                #bmg_RBC = bmg_RBC2  # Vergleichswert aktualisieren
-            #else:
-                #return RBC
-            # sonst: RBC2 wird einfach verworfen
-    return RBC
+            if nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
+                network = network
+                changed = True
+            else:
+                current_node2_successors = list(network.successors(node2))
+                for successor in current_node2_successors:
+                    network.remove_edge(node2, successor)
+                for successor in node2_successors:
+                    network.add_edge(node2, successor)
+                for predecessor in predecessors:
+                    network.add_edge(predecessor, node1)
+                for successor in node1_successors:
+                    network.add_edge(node1, successor)
+                if not nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
+                    raise ValueError("Combine nodes in-place recovery is broken. Contact Max")
+    return network, changed
 
 
 def greedy_search(input_network: nx.DiGraph,
@@ -329,11 +338,11 @@ def greedy_search(input_network: nx.DiGraph,
         #     continue
 
         # #removing diamonds
-        #network, valid = remove_diamond(network, network_bmg, bmg_mode)
-        #if valid:
-            equal_score_steps = 0
-            score = tree_likeness_function(network)
-            continue
+        # network, valid = remove_diamond(network, network_bmg, bmg_mode)
+        # if valid:
+        #     equal_score_steps = 0
+        #     score = tree_likeness_function(network)
+        #     continue
 
         if random.randint(0,1) == 0:
             network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
@@ -347,13 +356,14 @@ def greedy_search(input_network: nx.DiGraph,
         equal_score_steps += 1
 
         if equal_score_steps > 10:
-            network = combine_nodes(network)
+            network, valid = combine_nodes(network, network_bmg, bmg_mode)
+            if valid:
+                continue
             if report_step_num:
                 return network, i
             else:
                 print("No further improvements found")
             return network
-    network = combine_nodes(network)
     if report_step_num:
         return network, i
     return network
