@@ -221,12 +221,12 @@ def remove_diamond(network, network_bmg, bmg_mode):
                     continue
                 lca = nx.lowest_common_ancestor(network, parent1, parent2)
 
-                network.add_edge(lca, node)
                 network.remove_edge(parent1, node)
                 network.remove_edge(parent2, node)
+                network.add_edge(lca, node)
                 if nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
                     return network, True
-                
+
                 network.remove_edge(lca, node)
                 network.add_edge(parent1, node)
                 network.add_edge(parent2, node)
