@@ -22,7 +22,7 @@
 - [ ] Tasks und Figures füllen
 - [x] Unit-Tests
 - [ ] Folie für Hybriden
-	- [ ] verschiedene Varianten
+	- [ ] verschiedene Varianten?
 	- [ ] wie haben wir Cyclen vermieden?
 	- [ ] Pseudocode
 - [ ] Netzwerke suchen als Beispiel, wann die besseren Auswahlkriterien Sinn machen
