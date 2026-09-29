@@ -210,6 +210,28 @@ def try_pulling_down(network, score, network_bmg, tree_likeness_function, bmg_mo
                 network.remove_edge(new_parent, child)
     return network, score, False
 
+def remove_diamond(network, network_bmg, bmg_mode):
+    nodes = list(network.nodes)
+    random.shuffle(nodes)
+    for node in nodes:
+        parents = list(network.predecessors(node))
+        for parent1 in parents:
+            for parent2 in parents:
+                if parent1 == parent2:
+                    continue
+                lca = nx.lowest_common_ancestor(network, parent1, parent2)
+
+                network.add_edge(lca, node)
+                network.remove_edge(parent1, node)
+                network.remove_edge(parent2, node)
+                if nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
+                    return network, True
+                
+                network.remove_edge(lca, node)
+                network.add_edge(parent1, node)
+                network.add_edge(parent2, node)
+    return network, False
+
 def greedy_search(network: nx.DiGraph,
                   max_number_of_steps:int = 100,
                   tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness,
@@ -267,6 +289,13 @@ def greedy_search(network: nx.DiGraph,
         #     equal_score_steps = 0
         #     score = score -1
         #     continue
+
+        # #removing diamonds
+        network, valid = remove_diamond(network, network_bmg, bmg_mode)
+        if valid:
+            equal_score_steps = 0
+            score = tree_likeness_function(network)
+            continue
 
         if random.randint(0,1) == 0:
             network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
