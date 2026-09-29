@@ -53,7 +53,8 @@ def display_multiple_graphs(graphs: list, node_to_color_dict = None, tree_likene
 
         #bmg
         gbmg = bmg(G, bmg_type)
-        bmg_pos = nx.circular_layout(gbmg)
+        if i <= 1:
+            bmg_pos = nx.circular_layout(gbmg)
         node_color = color_dict_to_sequence(gbmg, node_to_color_dict)
         nx.draw(gbmg, bmg_pos, node_color= node_color, ax=axes[1,i], with_labels=True)
 
