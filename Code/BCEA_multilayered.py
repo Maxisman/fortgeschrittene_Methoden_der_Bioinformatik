@@ -205,7 +205,7 @@ def MLBCEA(BMG: nx.DiGraph, maxLayers: int = None):
         layer += 1
 
     resolved = not pending
-    return BCN, resolved, pending
+    return BCN  #, resolved, pending
 
 
 
