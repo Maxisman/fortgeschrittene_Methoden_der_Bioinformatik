@@ -43,7 +43,7 @@ for seed in range(50):
 
     #if nx.utils.graphs_equal(bmg(G), bmg(bic_cherry)):
     original_bic = deepcopy(bic_cherry)
-    improved_network = greedy_search(bic_cherry, max_number_of_steps=50, tree_likeness_function = path_minus_resistance)
+    improved_network = greedy_search(bic_cherry, max_number_of_steps=50, tree_likeness_function = compute_tree_likeness)
     assert(nx.utils.graphs_equal(bmg(original_bic), bmg(improved_network)))
     print(f"The seed is: {seed}")
     display_multiple_graphs([G, original_bic, improved_network], thin_gene_colors | colors)
