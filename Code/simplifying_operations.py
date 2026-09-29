@@ -266,7 +266,7 @@ def combine_nodes(RBC):
     return RBC
 
 
-def greedy_search(network: nx.DiGraph,
+def greedy_search(input_network: nx.DiGraph,
                   max_number_of_steps:int = 100,
                   tree_likeness_function:Callable[[nx.DiGraph], int] = compute_tree_likeness,
                   bmg_mode:str="weak", report_step_num:bool =False):
@@ -274,7 +274,7 @@ def greedy_search(network: nx.DiGraph,
 
         Parameters
         ----------
-        network: nx.DiGraph
+        input_network: nx.DiGraph
             network that will be edited to be more tree-like
         max_number_of_steps: int
             maximum number of editing steps before the final network is returned
@@ -291,6 +291,7 @@ def greedy_search(network: nx.DiGraph,
             more tree like version of the network with the same best match graph
 
     """
+    network = input_network.copy()
     network_bmg = bmg(network, bmg_mode)
     score = tree_likeness_function(network)
     equal_score_steps = 0
