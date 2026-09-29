@@ -10,19 +10,20 @@
 - [x] ewig langen loop bauen um strong bmg auf trees zu testen
 	- [x] Kann man bei BIC-Cherry gewisse Kanten rauslöschen, ohne dass etwas kaputt geht
 	- [x] kann man nach jeder hinzugefügten Kante schauen, ob der BMG bereits der Richtige ist (selektiv Kanten hinzufügen) (erst die BM fixen, die in keine Richtung verbunden sind, dann wenn der BMG noch nicht stimmt, weiter machen)
-		- [ ] vielleicht als Vorschlag für Präsi, wird aber nicht so reproduzierbar sein wie gewünscht
+		- [x] vielleicht als Vorschlag für Präsi, wird aber nicht so reproduzierbar sein wie gewünscht
 	- [x] Bei der Wahl von Z: Wenn es mehrere best matches zu x gibt, dann den wählen, bei dem auch gilt z->x
 	- [x] Kandidatenwahl als Hilfsfunktion? -> bessere Lesbarkeit
 	- [x] BIC-Cherry explizit für strong definition
-- [ ] sollte man im BCEA eine Abfrage einbauen, um zu testen ob es einen erklärenden Baum des BMGs gibt(über explaining triples?)
-	- [ ] Hinweis ausprinten, dass BCEA unnötig ist, least resolved Tree besser wäre
+- [x] sollte man im BCEA eine Abfrage einbauen, um zu testen ob es einen erklärenden Baum des BMGs gibt(über explaining triples?)
+	- [x] Hinweis ausprinten, dass BCEA unnötig ist, least resolved Tree besser wäre
 - [x] Neue Darstellung für BICCherry Netzwerke
 - [x] Funktion VisualizeBMG / Network / BCN
-- [ ] Definitionen konkretisieren für Folien
+- [x] Definitionen konkretisieren für Folien
 - [ ] Tasks und Figures füllen
-- [ ] Unit-Tests
+- [x] Unit-Tests
 - [ ] Folie für Hybriden
 	- [ ] verschiedene Varianten
 	- [ ] wie haben wir Cyclen vermieden?
 	- [ ] Pseudocode
 - [ ] Netzwerke suchen als Beispiel, wann die besseren Auswahlkriterien Sinn machen
+- [ ] Pseudocode für multilayered BCEA?
