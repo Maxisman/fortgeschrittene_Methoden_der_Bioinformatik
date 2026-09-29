@@ -2,7 +2,6 @@ import networkx as nx
 import itertools
 from collections import Counter
 import random
-rng = random.Random(42)
 
 ############################################################################
 # Datei mit allen 4 BCEA Arten, mit zunehmend strikterer Kandidatenauswahl #
@@ -80,19 +79,21 @@ def BCEA1(G: nx.DiGraph) -> nx.DiGraph:
     for pair, p_name in p_nodes.items():
         x,y = sorted(pair)
         if not G.has_edge(x,y):
-            y_prime = rng.choice([str(v) for v in G.nodes() if v != y and colors[v]==colors[y]])
+            y_prime = random.choice([str(v) for v in G.nodes() if v != y and colors[v]==colors[y]])
             ## insert q_xy' below p_xy
             q_name = f"q_{x}_{y}_{y_prime}"
             N.add_edge(p_name,q_name)
             N.add_edge(q_name, x)
             N.add_edge(q_name, y_prime)
+            N.remove_edge(p_name,x)
         if not G.has_edge(y,x):
-            x_prime = rng.choice([str(v) for v in G.nodes() if v != x and colors[v]==colors[x]])
+            x_prime = random.choice([str(v) for v in G.nodes() if v != x and colors[v]==colors[x]])
             ## insert q_yx'' below p_xy
             q_name = f"q_{y}_{x}_{x_prime}"
             N.add_edge(p_name, q_name)
             N.add_edge(q_name, y)
             N.add_edge(q_name, x_prime)
+            N.remove_edge(p_name,y)
 
     # return network
     return N
@@ -151,9 +152,10 @@ def BCEA2(G: nx.DiGraph) -> nx.DiGraph:
         x,y = sorted(pair)
         if not G.has_edge(x,y):
 
-            # 2. asymmetrischer best match (x->z)
-            # 3. asymmetrischer best match (z->x)
-            # 4. irgendein y' != y
+            # 1. asymmetrischer best match (x->z)
+            # 2. asymmetrischer best match (z->x)
+            # 3. irgendein y' != y
+
             candidates = []
             candidates = [v for v in G.successors(x) if colors[v] == colors[y]]
 
@@ -163,7 +165,7 @@ def BCEA2(G: nx.DiGraph) -> nx.DiGraph:
             if not candidates:
                 candidates = [v for v in G.nodes if colors[v] == colors[y] and v != y]
 
-            y_prime = rng.choice(candidates)
+            y_prime = random.choice(candidates)
 
 
             ## insert q_xy' below p_xy
@@ -184,7 +186,7 @@ def BCEA2(G: nx.DiGraph) -> nx.DiGraph:
             if not candidates:
                 candidates = [v for v in G.nodes if colors[v] == colors[x] and v != x]
 
-            x_prime = rng.choice(candidates)
+            x_prime = random.choice(candidates)
 
 
             ## insert q_yx'' below p_xy
@@ -196,7 +198,7 @@ def BCEA2(G: nx.DiGraph) -> nx.DiGraph:
                           
     return N
 
-def find_candidate(BMG: nx.DiGraph, x, y, mode: str = "weak"):
+def find_candidate(BMG: nx.DiGraph, x, y, mode: str):
     """
     Sucht einen Ersatzkandidaten fuer y (gleiche Farbe wie y), der x's
     fehlenden Match zu y ersetzt.
@@ -214,7 +216,7 @@ def find_candidate(BMG: nx.DiGraph, x, y, mode: str = "weak"):
     if mode == "weak":
         candidates = [v for v in BMG.successors(x) if BMG.nodes[v]["color"] == BMG.nodes[y]["color"] and BMG.has_edge(v, x)]
         if candidates:
-            return rng.choice(candidates)
+            return random.choice(candidates)
         # else:
         #     print("Warning from BCEA: The resulting BMG might differ von the original BMG -> try the multilayered BCEA")
 
@@ -226,7 +228,7 @@ def find_candidate(BMG: nx.DiGraph, x, y, mode: str = "weak"):
     if not candidates:
         candidates = [v for v in BMG.nodes if BMG.nodes[v]["color"] == BMG.nodes[y]["color"] and v != y]
 
-    return rng.choice(candidates)
+    return random.choice(candidates)
 
 
 def find_joint_candidates(BMG: nx.DiGraph, x, y):
@@ -264,7 +266,7 @@ def find_joint_candidates(BMG: nx.DiGraph, x, y):
         if not x_pool or not y_pool:
             return None
         safe = [(xp, yp) for xp in x_pool for yp in y_pool if is_safe(xp, yp)]
-        return rng.choice(safe) if safe else None
+        return random.choice(safe) if safe else None
  
     # Stufe 1: echte Matches (biologisch bevorzugt)
     x_succ = [v for v in BMG.successors(y) if BMG.nodes[v]["color"] == color_x]
@@ -285,9 +287,9 @@ def find_joint_candidates(BMG: nx.DiGraph, x, y):
     # falls vorhanden.
     # print("the BMG of the BCN likely differs from the original BMG")
     if x_succ and y_succ:
-        return rng.choice([(xp, yp) for xp in x_succ for yp in y_succ])
+        return random.choice([(xp, yp) for xp in x_succ for yp in y_succ])
     if x_all and y_all:
-        return rng.choice([(xp, yp) for xp in x_all for yp in y_all])
+        return random.choice([(xp, yp) for xp in x_all for yp in y_all])
     
     return None
 

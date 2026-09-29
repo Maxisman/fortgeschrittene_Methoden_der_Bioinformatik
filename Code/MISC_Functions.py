@@ -6,9 +6,11 @@ import matplotlib.pyplot as plt
 import pydot
 import shlex
 import subprocess
+import itertools
 
 from collections import defaultdict
 from networkx.drawing.nx_pydot import graphviz_layout
+from bmg_Tony import bmg
 
 
 def generateTree(seed:int = None, nSpecies:int = 2):
@@ -33,6 +35,36 @@ def generateTree(seed:int = None, nSpecies:int = 2):
     geneTree = te.prune_losses(T)
     
     return speciesTree, geneTree
+
+
+def contract_nodes(RBC: nx.DiGraph):
+
+    bmg_RBC = bmg(RBC,'weak')
+    inner_nodes = [node for node in RBC.nodes if RBC.out_degree(node) > 0 and RBC.in_degree(node) > 0]
+    for node1, node2 in itertools.combinations(inner_nodes, 2):
+
+        # Knoten könnte durch eine frühere, akzeptierte Änderung schon entfernt worden sein
+        if not RBC.has_node(node1) or not RBC.has_node(node2):
+            continue
+
+        if (set(RBC.predecessors(node1)) == set(RBC.predecessors(node2))
+                and RBC.out_degree(node1) > 0
+                and RBC.out_degree(node2) > 0):
+
+            RBC2 = RBC.copy()   # echte, unabhängige Kopie
+
+            for successor in RBC.successors(node1):
+                RBC2.add_edge(node2, successor)
+            RBC2.remove_node(node1)
+
+            bmg_RBC2 = bmg(RBC2, 'weak')
+
+            if nx.utils.graphs_equal(bmg_RBC, bmg_RBC2):
+                RBC = RBC2              # Änderung übernehmen
+
+            # sonst: RBC2 wird einfach verworfen
+    return RBC
+
 
 
 
@@ -392,103 +424,5 @@ def _draw_bcn(
  
     if save_path:
         plt.savefig(save_path, dpi=150)
- 
-    return ax
-
-
- 
-# def visualize_BCN(
-#     BCN: nx.DiGraph,
-#     ax=None,
-#     figsize=(14, 8),
-#     leaf_font_size=9,
-#     internal_font_size=6,
-#     show_internal_labels=True,
-#     save_path=None,
-# ):
-#     """
-#     Zeichnet ein STANDARD-BIC-Cherry-Netzwerk (nur P- und Q-Ebene) in
-#     exakt vier vertikalen Ebenen: rho (zentriert), P-Knoten, Q-Knoten,
-#     farbige Blaetter -- horizontal kreuzungsarm via `dot` mit expliziten
-#     rank=same-Vorgaben angeordnet.
- 
-#     Fuer Multi-Layer-BCNs (mit R-/S-/...-Knoten, siehe MLBCEA) wirft diese
-#     Funktion einen ValueError -- dafuer braeuchte es eine Variante mit
-#     variabler Ebenenzahl.
- 
-#     Parameters
-#     ----------
-#     BCN : networkx.DiGraph
-#         Das zu zeichnende BIC-Cherry-Netzwerk. Blaetter brauchen ein
-#         "color"-Attribut.
-#     ax : matplotlib.axes.Axes, optional
-#         Falls gegeben, wird darauf gezeichnet statt eine neue Figure zu
-#         erstellen.
-#     show_internal_labels : bool
-#         Ob P-/Q-Knotennamen mit angezeigt werden (meist unleserlich lang,
-#         daher Default False).
-#     save_path : str, optional
-#         Falls gegeben, wird die Figure dorthin gespeichert.
- 
-#     Returns
-#     -------
-#     ax : matplotlib.axes.Axes
-#     """
-#     rho, p_nodes, q_nodes, leaves = _classify_bcn_nodes(BCN)
- 
-#     rank_groups = [[rho], p_nodes, q_nodes, leaves]
-#     pos = _dot_layout_with_ranks(BCN, rank_groups)
- 
-#     if ax is None:
-#         _, ax = plt.subplots(figsize=figsize)
- 
-#     # --- Farben fuer Blaetter ---
-#     leaf_colors_raw = sorted({BCN.nodes[l]["color"] for l in leaves}, key=str)
-#     palette = plt.cm.tab10.colors
-#     color_map = {c: palette[i % len(palette)] for i, c in enumerate(leaf_colors_raw)}
- 
-#     # --- Kanten zeichnen ---
-#     for u, v in BCN.edges():
-#         x1, y1 = pos[u]
-#         x2, y2 = pos[v]
-#         ax.plot([x1, x2], [y1, y2], color="#999999", linewidth=0.8, zorder=1)
- 
-#     # --- Knoten zeichnen ---
-#     def draw_nodes(nodes, color, size, label_fn=None, font_size=8):
-#         for n in nodes:
-#             x, y = pos[n]
-#             ax.scatter(x, y, s=size, color=color, edgecolors="black",
-#                        linewidths=0.6, zorder=2)
-#             if label_fn is not None:
-#                 ax.annotate(label_fn(n), (x, y), textcoords="offset points",
-#                             xytext=(0, -size ** 0.5 - 6), ha="center",
-#                             va="top", fontsize=font_size, zorder=3)
- 
-#     draw_nodes([rho], "black", 120)
-#     draw_nodes(p_nodes, "#DDDDDD", 90,
-#                label_fn=(lambda n: n) if show_internal_labels else None,
-#                font_size=internal_font_size)
-#     draw_nodes(q_nodes, "#AAAAAA", 90,
-#                label_fn=(lambda n: n) if show_internal_labels else None,
-#                font_size=internal_font_size)
-#     for leaf in leaves:
-#         x, y = pos[leaf]
-#         ax.scatter(x, y, s=260, color=color_map[BCN.nodes[leaf]["color"]],
-#                    edgecolors="black", linewidths=0.8, zorder=2)
-#         ax.annotate(str(leaf), (x, y), ha="center", va="center",
-#                     fontsize=leaf_font_size, fontweight="bold", zorder=3)
- 
-#     # --- Legende fuer Blattfarben ---
-#     handles = [
-#         plt.Line2D([0], [0], marker="o", linestyle="", markersize=10,
-#                    markerfacecolor=color_map[c], markeredgecolor="black", label=str(c))
-#         for c in leaf_colors_raw
-#     ]
- 
-#     ax.set_axis_off()
-#     plt.tight_layout()
- 
-#     if save_path:
-#         plt.savefig(save_path, dpi=150)
  
     return ax
