@@ -127,3 +127,21 @@ It's important to use this when printing the graphs: `node_color=[color] * len(n
 - mathematical equation for difference between best match graph definitions (formal)
 - translate lrt from asymetree to network x
 -  create function to reduce bmg based on thinness classes (same edges in both directions)
+
+# Vereinfachungen vor Ansetzen des Bic Cherry Algorithmus
+Einführung von zwei neuen Regeln:
+1. Gibt es eine node, die im BMG best match zu und von allen ist, häng sie direkt an die Wurzel des Bic Cherry und betrachte sie nicht weiter
+2. Gibt es eine node, die keine eingehenden Kanten im BMG ist (von keinem best match ist) und mindestens eine andere node derselben Farbe, dann hänge sie direkt an die Wurzel des (Sub)Baumes
+
+Demonstration alt gegen neu:
+![[Screenshot From 2026-09-25 20-54-13.png]]
+
+Neue Variante kann direkt den lrt raus geben
+![[Screenshot From 2026-09-25 21-30-36.png]]
+
+Neue Idee für zusätzliche Erweiterung:
+Nachdem die erste Runde abgeschlossen ist, überprüfe ob sich die BMGs in zwei Gruppen aufteilen lassen (e.g. ist der Graph connected). Falls nicht, (wie es in diesem Fall der Fall wäre, nachdem die 3 entfernt wurde), dann teile an der Wurzel in die beiden Komponenten, und betrachte die Komponenten einzeln weiter.
+![[Pasted image 20260925214128.png]]
+
+Tatsächlich kann man das für einen ähnlichen Graph auch schon mit einem mehrfach loop lösen:
+![[Screenshot From 2026-09-25 21-50-00.png]]
