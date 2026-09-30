@@ -13,6 +13,42 @@ from networkx.drawing.nx_pydot import graphviz_layout
 from bmg_Tony import bmg
 
 
+# ======================================================================================
+#  generateGeneTree_max_leaves - generiert einen zufälligen Genbaum mit maximaler Anzahl an Blättern
+# ======================================================================================
+
+def generateGeneTree(seed: int = None, nSpecies: int = 2, max_leaves: int = 5):
+
+    if seed:
+        # Setze den Seed für Pythons Standard-Zufallsfunktionen
+        random.seed(seed)
+        # Setze den Seed für NumPys Zufallsfunktionen (wichtig für AsymmeTree)
+        np.random.seed(seed)
+
+    while True:
+
+        # species tree
+        speciesTree = te.species_tree_n_age(
+            age = 1.0,
+            n = nSpecies
+            #, contraction_probability=0.0, contraction_proportion=0.2, contraction_bias="exponential"
+        )
+        # gene tree
+        T = te.dated_gene_tree(
+            speciesTree, dupl_rate=1.0, loss_rate=0, hgt_rate=0.2, gc_rate=0.2, prohibit_extinction="per_species", dupl_polytomy=0.5
+        )
+        # prune all loss branches and the planted root
+        geneTree = te.prune_losses(T)
+
+        nLeaves = len(list(geneTree.leaves()))
+        if nLeaves < max_leaves and nLeaves > 2 and nLeaves >= nSpecies:  #wenn es nur zwei Blätter (oder nSpezies?????) gibt, so lassen sich keine Hybriden einfügen
+            break
+
+    return speciesTree, geneTree
+
+
+
+
 def generateTree(seed:int = None, nSpecies:int = 2):
 
     if seed:
@@ -35,6 +71,26 @@ def generateTree(seed:int = None, nSpecies:int = 2):
     geneTree = te.prune_losses(T)
     
     return speciesTree, geneTree
+
+
+def lcas_multiple_nodes(N: nx.DiGraph, nodes: set) -> set:
+    if not nodes:
+        return set()
+
+    # Vorfahren jedes Knotens (inkl. des Knotens selbst)
+    ancestor_sets = [nx.ancestors(N, node) | {node} for node in nodes]
+
+    # Gemeinsame Vorfahren aller Knoten
+    common_ancestors = set.intersection(*ancestor_sets)
+
+    # Teilgraph der gemeinsamen Vorfahren
+    sub = N.subgraph(common_ancestors)
+
+    # LCAs: gemeinsame Vorfahren ohne ausgehende Kanten im Teilgraphen,
+    # d.h. kein anderer gemeinsamer Vorfahre liegt "unter" ihnen
+    return {anc for anc in common_ancestors if sub.out_degree(anc) == 0}
+
+
 
 
 def contract_nodes(RBC: nx.DiGraph):
