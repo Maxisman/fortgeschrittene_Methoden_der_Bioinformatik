@@ -126,7 +126,6 @@ def BICcherry_reverse(BMG: nx.DiGraph, root: str = "rho", simplify: bool = False
             if (need_to_break1 and need_to_break2):
                 # both steps did not find any improvements, break the loop
                 break
-        # TODO: Change root number after only a single full cycle
 
         # reattach all roots
         for i in range(curr_root_num):

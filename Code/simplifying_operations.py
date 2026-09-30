@@ -338,11 +338,11 @@ def greedy_search(input_network: nx.DiGraph,
         #     continue
 
         #removing diamonds
-        network, valid = remove_diamond(network, network_bmg, bmg_mode)
-        if valid:
-            equal_score_steps = 0
-            score = tree_likeness_function(network)
-            continue
+        #network, valid = remove_diamond(network, network_bmg, bmg_mode)
+        #if valid:
+        #    equal_score_steps = 0
+        #    score = tree_likeness_function(network)
+        #    continue
 
         if random.randint(0,1) == 0:
             network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
