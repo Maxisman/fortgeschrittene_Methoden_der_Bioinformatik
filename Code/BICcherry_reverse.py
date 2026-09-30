@@ -298,7 +298,7 @@ def BICcherry_reverse(BMG: nx.DiGraph, root: str = "rho", simplify: bool = False
 
     if pending:
         import warnings
-        warnings.warn(f"bmg_to_network: could not place edges {pending}")
+        warnings.warn(f"BICcherry_reverse: could not place edges {pending}")
 
     # --- nodes that ended up without a parent go directly under root ---
     for n in bmg.nodes:
