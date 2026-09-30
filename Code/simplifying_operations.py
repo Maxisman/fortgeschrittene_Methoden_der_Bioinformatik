@@ -258,7 +258,6 @@ def combine_nodes(network, network_bmg, bmg_mode):
             network.remove_node(node1)
 
             if nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
-                network = network
                 changed = True
             else:
                 current_node2_successors = list(network.successors(node2))
@@ -311,6 +310,7 @@ def greedy_search(input_network: nx.DiGraph,
 
         remove_non_informative_nodes(network)
         remove_redundant_vertices(network)
+        score = tree_likeness_function(network)
 
         #contracting edges action
         # network, score, valid = contract_edge(network, score, network_bmg, tree_likeness_function, bmg_mode)
