@@ -145,6 +145,9 @@ def visualize_bmg(BMG, ax = None):
     # 4. Farben in der korrekten Reihenfolge der sortierten Nodes zuweisen
     node_colors = [color_dict[BMG.nodes[n].get('color', '')] for n in sorted_nodes]
 
+    # Farben nach Nodefarben
+    # nodes_list, node_colors = zip(*BMG.nodes(data="color", default="grey"))
+
     if ax is None:
         ax = plt.gca()
 
@@ -190,6 +193,11 @@ def visualize_network(N, ax=None):
             node_colors.append("gray")
         else:
             node_colors.append(color_dict.get(N.nodes[n].get('color', ''), "black"))
+
+
+    # snippet für andere Node-Farben
+    # nodes_list, node_colors = zip(*N.nodes(data="color", default="grey"))
+
 
     # 4. Graphen zeichnen (geradlinige Kanten, da connectionstyle fehlt)
     if ax is None:

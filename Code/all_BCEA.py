@@ -18,7 +18,7 @@ import random
 # Auswahl für weak:
 # 1. reziproger best match (x->z & z->x)
 # 2. asymmetrischer best match (x->z)
-# 3. asymmetrischer best match (z->x)
+# 3. asymmetrischer best match (z->x)   ##### macht das überhaupt Sinn?
 # 4. irgendein y' != y
 #
 # Auswahl für strict:

@@ -84,7 +84,10 @@ def BICcherry_reverse(BMG: nx.DiGraph, root: str = "rho", simplify: bool = False
             att_to_root = False
             for leaf in leaves:
                 suc = frozenset(bmg.successors(leaf))
+                cur_color = bmg.nodes[leaf]["color"]
+                same_color = color_to_leaves[cur_color]
                 prec = frozenset(bmg.predecessors(leaf))
+                # reciprocal best matches and every node of different color is best match
                 if ((suc == prec) and (suc == leaves - [leaf])):
                     #print(f"found {leaf}")
                     cur_color = bmg.nodes[leaf]["color"]
@@ -295,7 +298,7 @@ def BICcherry_reverse(BMG: nx.DiGraph, root: str = "rho", simplify: bool = False
 
     if pending:
         import warnings
-        warnings.warn(f"bmg_to_network: could not place edges {pending}")
+        warnings.warn(f"BICcherry_reverse: could not place edges {pending}")
 
     # --- nodes that ended up without a parent go directly under root ---
     for n in bmg.nodes:
