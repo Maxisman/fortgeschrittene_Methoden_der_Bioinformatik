@@ -41,13 +41,15 @@
 \Function{FindCandidate}{$G,a,b$}
   \State $C \gets \{v\in L : \sigma(v)=\sigma(b),\ (a,v)\in E(G)\}$
          \Comment{$\neq\emptyset$ if $(G,\sigma)$ is sink-free}
+ \State \textbf{if} $C=\emptyset$ \textbf{then}
+         $C \gets \{v\in L\setminus\{b\} : \sigma(v)=\sigma(b)\}$
   \State \Return random element of $C$
 \EndFunction
 \end{algorithmic}
 
 
 
-\textbf{Algorithm 4: BIC-cherry + prioritised expansion}\par\smallskip
+\textbf{Algorithm 4: BIC-cherry + expand via symmetry (weak only)}\par\smallskip
 \begin{algorithmic}[1]
 \Require properly coloured digraph $(G,\sigma)$ on $L$ with the sicor-in-hub property
 \Ensure leaf-coloured network $(N,\sigma)$
@@ -77,6 +79,52 @@
 \end{algorithmic}
 
 
+\textbf{Algorithm 5: BIC-cherry + expand via safe-pairs (strict only)}\par\smallskip
+\begin{algorithmic}[1]
+\Require properly coloured digraph $(G,\sigma)$ on $L$ with the sicor-in-hub property
+\Ensure leaf-coloured network $(N,\sigma)$
+\State $V(N) \gets L\cup\{\rho\}$;\ \ $E(N) \gets \emptyset$
+\ForAll{$\{x,y\}\subseteq L$ with $\sigma(x)\neq\sigma(y)$} \Comment{BIC-cherry network}
+  \State add $p_{xy}$ with edges $(\rho,p_{xy}),\,(p_{xy},x),\,(p_{xy},y)$
+\EndFor
+\ForAll{$\{x,y\}\subseteq L$ with $\sigma(x)\neq\sigma(y)$} \Comment{expansion}
+  \If{$(x,y)\notin E(G)$ \textbf{and} $(y,x)\notin E(G)$} \Comment{both directions missing}
+    \State $(x',y') \gets \Call{FindJointCandidates}{G,x,y}$
+  \Else \Comment{at most one direction missing}
+    \State \textbf{for all} $(a,b)\in\big((x,y),(y,x)\big)$ with $(a,b)\notin E(G)$ \textbf{do}
+           $b' \gets \Call{FindCandidate}{G,a,b}$
+  \EndIf
+  \ForAll{$(a,b)\in\big((x,y),(y,x)\big)$ with $(a,b)\notin E(G)$}
+    \State add new vertex $q$ with edges $(p_{xy},q),\,(q,a),\,(q,b')$ \Comment{$[ab:ab']$}
+    \State remove edge $(p_{xy},a)$ \Comment{shortcut}
+  \EndFor
+\EndFor
+\State \Return $(N,\sigma)$
+\Statex
+\Function{FindCandidate}{$G,a,b$}
+  \State $C \gets \{v\in L : \sigma(v)=\sigma(b),\ (a,v)\in E(G)\}$
+  \State \textbf{if} $C=\emptyset$ \textbf{then}
+         $C \gets \{v\in L\setminus\{b\} : \sigma(v)=\sigma(b),\ (v,a)\in E(G)\}$
+  \State \textbf{if} $C=\emptyset$ \textbf{then}
+         $C \gets \{v\in L\setminus\{b\} : \sigma(v)=\sigma(b)\}$
+  \State \Return random element of $C$
+\EndFunction
+\Statex
+\Function{FindJointCandidates}{$G,x,y$}
+  \State $X_1 \gets \{v\in L : \sigma(v)=\sigma(x),\ (y,v)\in E(G)\}$
+  \State $Y_1 \gets \{v\in L : \sigma(v)=\sigma(y),\ (x,v)\in E(G)\}$
+  \State $S \gets \{(x',y')\in X_1\times Y_1 : (x',y')\notin E(G),\ (y',x')\notin E(G)\}$
+  \State \textbf{if} $S\neq\emptyset$ \textbf{then} \Return random element of $S$
+  \State $X_2 \gets \{v\in L\setminus\{x\} : \sigma(v)=\sigma(x)\}$
+  \State $Y_2 \gets \{v\in L\setminus\{y\} : \sigma(v)=\sigma(y)\}$
+  \State $S \gets \{(x',y')\in X_2\times Y_2 : (x',y')\notin E(G),\ (y',x')\notin E(G)\}$
+  \State \textbf{if} $S\neq\emptyset$ \textbf{then} \Return random element of $S$
+  \State \textbf{if} $X_1\times Y_1\neq\emptyset$ \textbf{then} \Return random element of $X_1\times Y_1$
+  \State \Return random element of $X_2\times Y_2$ \Comment{no safe pair exists}
+\EndFunction
+\end{algorithmic}
+
+
 \textbf{Algorithm 5: BIC-cherry + mode-aware expansion}\par\smallskip
 \begin{algorithmic}[1]
 \Require properly coloured digraph $(G,\sigma)$ on $L$ with the sicor-in-hub property,
@@ -97,19 +145,7 @@
   \EndFor
 \EndFor
 \State \Return $(N,\sigma)$
-\Statex
-\Function{FindCandidate}{$G,a,b,\text{mode}$}
-  \State $C \gets \emptyset$
-  \State \textbf{if} mode $=$ weak \textbf{then}
-         $C \gets \{v\in L : \sigma(v)=\sigma(b),\ (a,v)\in E(G),\ (v,a)\in E(G)\}$
-  \State \textbf{if} $C=\emptyset$ \textbf{then}
-         $C \gets \{v\in L : \sigma(v)=\sigma(b),\ (a,v)\in E(G)\}$
-  \State \textbf{if} $C=\emptyset$ \textbf{then}
-         $C \gets \{v\in L\setminus\{b\} : \sigma(v)=\sigma(b),\ (v,a)\in E(G)\}$
-  \State \textbf{if} $C=\emptyset$ \textbf{then}
-         $C \gets \{v\in L\setminus\{b\} : \sigma(v)=\sigma(b)\}$
-  \State \Return random element of $C$
-\EndFunction
+
 \Statex
 \Function{FindJointCandidates}{$G,x,y$}
   \State $X_1 \gets \{v\in L : \sigma(v)=\sigma(x),\ (y,v)\in E(G)\}$
@@ -125,6 +161,8 @@
   \State \Return $(\bot,\bot)$
 \EndFunction
 \end{algorithmic}
+
+
 
 
 
