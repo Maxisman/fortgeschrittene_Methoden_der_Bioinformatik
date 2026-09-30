@@ -22,9 +22,9 @@
 - [ ] Tasks und Figures füllen
 - [x] Unit-Tests
 - [ ] Folie für Hybriden
-	- [ ] verschiedene Varianten?
-	- [ ] wie haben wir Cyclen vermieden?
-	- [ ] Pseudocode
+	- [x] verschiedene Varianten?
+	- [x] wie haben wir Cyclen vermieden?
+	- [x] Pseudocode
 - [ ] Netzwerke suchen als Beispiel, wann die besseren Auswahlkriterien Sinn machen
 - [ ] Pseudocode für multilayered BCEA?
 - [ ] finding LCAs in Netzen laut https://www.baeldung.com/cs/lowest-common-ancestor-acyclic-graph

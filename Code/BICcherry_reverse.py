@@ -88,7 +88,7 @@ def BICcherry_reverse(BMG: nx.DiGraph, root: str = "rho", simplify: bool = False
                 same_color = color_to_leaves[cur_color]
                 prec = frozenset(bmg.predecessors(leaf))
                 # reciprocal best matches and every node of different color is best match
-                if ((suc == prec) and (suc == leaves - same_color)):
+                if ((suc == prec) and (suc == leaves - [leaf])):
                     #print(f"found {leaf}")
                     cur_color = bmg.nodes[leaf]["color"]
                     net.add_node(leaf, color=cur_color)
