@@ -221,13 +221,13 @@ def remove_diamond(network, network_bmg, bmg_mode):
                 if parent1 == parent2:
                     continue
                 lca = nx.lowest_common_ancestor(network, parent1, parent2)
-
+                if lca == parent1 or lca == parent2:
+                    continue
                 network.remove_edge(parent1, node)
                 network.remove_edge(parent2, node)
                 network.add_edge(lca, node)
                 if nx.utils.graphs_equal(bmg(network, bmg_mode), network_bmg):
                     return network, True
-
                 network.remove_edge(lca, node)
                 network.add_edge(parent1, node)
                 network.add_edge(parent2, node)
@@ -337,12 +337,12 @@ def greedy_search(input_network: nx.DiGraph,
         #     score = score -1
         #     continue
 
-        # #removing diamonds
-        # network, valid = remove_diamond(network, network_bmg, bmg_mode)
-        # if valid:
-        #     equal_score_steps = 0
-        #     score = tree_likeness_function(network)
-        #     continue
+        #removing diamonds
+        network, valid = remove_diamond(network, network_bmg, bmg_mode)
+        if valid:
+            equal_score_steps = 0
+            score = tree_likeness_function(network)
+            continue
 
         if random.randint(0,1) == 0:
             network, score, valid = try_pulling_up(network, score, network_bmg, tree_likeness_function, bmg_mode, allow_equal_score=True)
