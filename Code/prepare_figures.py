@@ -87,4 +87,46 @@ K = deepcopy(G)
 remove_redundant_vertices(K)
 L = deepcopy(K)
 pull_up(L, "c1", "w", "u")
-display_multiple_graphs([G,K,L], color_dict)
+#display_multiple_graphs([G,K,L], color_dict)
+
+mode = 'weak'
+
+Netz = nx.DiGraph()
+Netz.add_node('rho')
+Netz.add_node('1')
+Netz.add_node('2')
+Netz.add_node('3')
+Netz.add_node('x1', color = 'red')
+Netz.add_node('x2', color = 'red')
+Netz.add_node('x3', color = 'red')
+Netz.add_node('y1', color = 'blue')
+Netz.add_node('y2', color = 'blue')
+Netz.add_node('y3', color = 'blue')
+
+Netz.add_edges_from([('rho','1'),('rho','2')])
+Netz.add_edges_from([('1','3'),('1','x2'),('1','y3')])
+Netz.add_edges_from([('2','3'),('2','y2'),('2','x3')])
+Netz.add_edges_from([('3','x1'),('3','y1')])
+
+Netz.remove_nodes_from(["2", "y2", "x3"])
+
+from bmg_Tony import bmg
+from BICcherry_reverse import BICcherry_reverse
+BMG = bmg(Netz, mode)
+RBC_pre = BICcherry_reverse(BMG)
+color_dict = {
+    "x1" : "red",
+    "x2" : "red",
+    "x3" : "red",
+    "y1" : "blue",
+    "y2" : "blue",
+    "y3" : "blue",
+}
+
+improved = RBC_pre.copy()
+improved.remove_nodes_from(["q_x2_y1"])
+improved.add_edge("q_y3_x1", "x2")
+improved2 = improved.copy()
+improved2.remove_node("p_x2_y3")
+
+display_multiple_graphs([RBC_pre, improved, improved2], color_dict)

@@ -81,25 +81,25 @@ def return_example_tree2():
     return lrt, color_dict
 
 i = 0
-for seed in range(5000):
-    #G, colors = generate_tree(seed)
-    G, colors = return_example_tree2()
+for seed in range(50):
+    G, colors = generate_tree(seed)
+    #G, colors = return_example_tree2()
     # thin_BMG, thin_gene_colors = bmg_fun.thinness_graph(bmg(G, mode = "weak"), colors)
     # lrt = lrt_from_bmg(thin_BMG)
     lrt = lrt_from_bmg(bmg(G, mode="weak"))
     thin_BMG = bmg(G, mode="weak")
     thin_gene_colors = colors
 
-    #bic_cherry = BICcherryRestrict.BICcherryRestrict(thin_BMG)
-    bic_cherry = BICcherry_reverse(thin_BMG, simplify=True)
+    bic_cherry = BICcherryRestrict.BICcherryRestrict(thin_BMG)
+    #bic_cherry = BICcherry_reverse(thin_BMG, simplify=True)
 
     if nx.utils.graphs_equal(bmg(G, "weak"), bmg(bic_cherry, "weak")):
         improved_network = greedy_search(bic_cherry, max_number_of_steps=150, tree_likeness_function = compute_tree_likeness)
         assert(nx.utils.graphs_equal(bmg(bic_cherry), bmg(improved_network)))
         print(f"The seed is: {seed}")
         i += 1
-        if compute_tree_likeness(lrt) != compute_tree_likeness(improved_network):
-            display_multiple_graphs([G, lrt, bic_cherry, improved_network], thin_gene_colors | colors)
+        #if compute_tree_likeness(lrt) != compute_tree_likeness(improved_network):
+        display_multiple_graphs([G, lrt, bic_cherry, improved_network], thin_gene_colors | colors)
 print(i)
 
 
