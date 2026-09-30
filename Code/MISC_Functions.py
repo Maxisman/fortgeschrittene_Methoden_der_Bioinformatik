@@ -17,7 +17,7 @@ from bmg_Tony import bmg
 #  generateGeneTree_max_leaves - generiert einen zufälligen Genbaum mit maximaler Anzahl an Blättern
 # ======================================================================================
 
-def generateGeneTree(seed: int = None, nSpecies: int = 2, max_leaves: int = 5):
+def generateGeneTree_maxLeaves(seed: int = None, nSpecies: int = 2, max_leaves: int = 5):
 
     if seed:
         # Setze den Seed für Pythons Standard-Zufallsfunktionen
