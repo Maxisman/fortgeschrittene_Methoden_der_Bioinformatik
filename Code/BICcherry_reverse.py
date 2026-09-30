@@ -109,6 +109,7 @@ def BICcherry_reverse(BMG: nx.DiGraph, root: str = "rho", simplify: bool = False
                 same_color = color_to_leaves[cur_color]
                 prec = frozenset(bmg.predecessors(leaf))
                 suc = frozenset(bmg.successors(leaf))
+                #print(f"{leaf} has no indegrees: {len(prec) == 0} and out to all but same color {suc == leaves - same_color}")
                 if ((len(prec) == 0) and (suc == leaves - same_color)):
                     #print(f"found {leaf}")
                     net.add_node(leaf, color=cur_color)
@@ -122,7 +123,7 @@ def BICcherry_reverse(BMG: nx.DiGraph, root: str = "rho", simplify: bool = False
             else:
                 need_to_break2 = True
 
-            if need_to_break1:
+            if (need_to_break1 and need_to_break2):
                 # both steps did not find any improvements, break the loop
                 break
         # TODO: Change root number after only a single full cycle
